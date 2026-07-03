@@ -1,455 +1,272 @@
 import streamlit as st
 import random
 import urllib.parse
-import time
+from collections import Counter
 
-# ---------------------------------------------------------
-# 1. PAGE CONFIGURATION & INSANE CSS
-# ---------------------------------------------------------
+---------------------------------------------------------
+1. PAGE CONFIGURATION & INSANE CSS
+---------------------------------------------------------
 st.set_page_config(page_title="The Ultimate Holiday Finder ✈️", page_icon="🌍", layout="wide")
 
 def set_bg(color, text_color):
-    css = f"""
+css = f"""
 <style>
-    .stApp {{
-        background-color: {color} !important;
-        color: {text_color} !important;
-        transition: background-color 0.8s ease-in-out;
-    }}
-    h1, h2, h3, h4, p, span, label, div {{ color: {text_color} !important; font-family: 'Arial', sans-serif; }}
-    
-    /* Beautiful Buttons */
-    .stButton > button {{
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        color: {text_color} !important;
-        border: 2px solid {text_color} !important;
-        border-radius: 20px !important;
-        font-size: 22px !important;
-        font-weight: 900 !important;
-        padding: 15px 30px !important;
-        transition: all 0.3s ease-in-out !important;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.3) !important;
-        width: 100% !important;
-    }}
-    .stButton > button:hover {{
-        background-color: {text_color} !important;
-        color: {color} !important;
-        transform: translateY(-5px) scale(1.02) !important;
-    }}
-    
-    /* Radio buttons container */
-    .stRadio > div {{
-        background-color: rgba(0, 0, 0, 0.25) !important;
-        padding: 25px !important;
-        border-radius: 20px !important;
-        font-size: 24px !important;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-    }}
-    
-    /* Animations */
-    @keyframes heartbeat {{
-      0% {{ transform: scale(1); }} 14% {{ transform: scale(1.3); }} 28% {{ transform: scale(1); }}
-      42% {{ transform: scale(1.3); }} 70% {{ transform: scale(1); }}
-    }}
-    .beating-heart {{ font-size: 150px; text-align: center; animation: heartbeat 1.5s infinite; display: block; margin: 40px 0; }}
-    .giant-emoji {{ font-size: 80px !important; text-align: center; display: block; }}
+.stApp {{ background-color: {color} !important; color: {text_color} !important; transition: background-color 0.8s ease-in-out; }}
+h1, h2, h3, h4, p, span, label, div {{ color: {text_color} !important; font-family: 'Arial', sans-serif; }}
+.stButton > button {{
+background-color: rgba(255, 255, 255, 0.15) !important; color: {text_color} !important;
+border: 2px solid {text_color} !important; border-radius: 20px !important;
+font-size: 22px !important; font-weight: 900 !important; padding: 15px 30px !important;
+transition: all 0.3s ease-in-out !important; box-shadow: 0 8px 15px rgba(0,0,0,0.3) !important; width: 100% !important;
+}}
+.stButton > button:hover {{ background-color: {text_color} !important; color: {color} !important; transform: translateY(-5px) scale(1.02) !important; }}
+.stRadio > div {{ background-color: rgba(0, 0, 0, 0.3) !important; padding: 25px !important; border-radius: 20px !important; font-size: 24px !important; }}
+.cheeky-text {{ font-size: 24px !important; font-style: italic; color: #FFD700 !important; text-align: center; margin-bottom: 30px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; }}
+@keyframes heartbeat {{ 0% {{ transform: scale(1); }} 14% {{ transform: scale(1.3); }} 28% {{ transform: scale(1); }} 42% {{ transform: scale(1.3); }} 70% {{ transform: scale(1); }} }}
+.beating-heart {{ font-size: 150px; text-align: center; animation: heartbeat 1.5s infinite; display: block; margin: 40px 0; }}
 </style>
 """
-    st.markdown(css, unsafe_allow_html=True)
+st.markdown(css, unsafe_allow_html=True)
 
 def safe_image(prompt):
-    """Uses a free generative AI image endpoint to guarantee a beautiful, relevant holiday picture every time!"""
-    encoded = urllib.parse.quote(prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width=1200&height=700&nologo=true"
-    html = f'<img src="{url}" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
-    st.markdown(html, unsafe_allow_html=True)
+encoded = urllib.parse.quote(prompt)
+url = f"https://image.pollinations.ai/prompt/{encoded}?width=1200&height=700&nologo=true"
+html = f'<img src="{url}" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
+st.markdown(html, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 2. 50 DESTINATIONS DATABASE (MASSIVE!)
-# ---------------------------------------------------------
-# Tags used for logic: hot, cold, mild, beach, city, nature, mountains, adventure, relax, luxury, budget, foodie, culture
-destinations = {
-    "Seychelles": {"tags": ["hot", "beach", "relax", "luxury"], "color": "#FF61A6", "prompt": "luxury beautiful seychelles beach resort ocean", 
-                   "acts": ["Private beach dining with fresh lobster 🦞", "Couples jungle canopy spa 💆‍♀️", "Feeding giant Aldabra tortoises 🐢", "Yacht cruise with champagne 🥂", "Snorkeling with sea turtles 🐠", "Creole cooking class with local chef 🥘"]},
-    "Maldives": {"tags": ["hot", "beach", "relax", "luxury"], "color": "#00CED1", "prompt": "maldives overwater bungalow crystal clear water", 
-                 "acts": ["Sleeping in an overwater bungalow 🌊", "Dining in an underwater glass restaurant 🍽️", "Night swim with bioluminescent plankton ✨", "Private seaplane tour 🛩️", "Deep sea fishing for tuna 🎣", "Floating breakfast in infinity pool 🥞"]},
-    "Bora Bora": {"tags": ["hot", "beach", "relax", "luxury"], "color": "#1E90FF", "prompt": "bora bora tropical island luxury", 
-                  "acts": ["Swimming with friendly reef sharks 🦈", "Polynesian fire dancing show 🔥", "Helicopter ride over Mount Otemanu 🚁", "Drinking coconut cocktails on a private motu 🥥", "Jet skiing the turquoise lagoon 🚤", "Eating Tahitian Poisson Cru (raw fish) 🐟"]},
-    "Fiji": {"tags": ["hot", "beach", "adventure", "nature"], "color": "#3CB371", "prompt": "fiji tropical jungle beach beautiful", 
-             "acts": ["Taking a mud bath in the Sabeto Hot Springs 🌋", "Whitewater rafting the Upper Navua River 🚣", "Attending a traditional Kava ceremony 🥥", "Scuba diving the Great Astrolabe Reef 🤿", "Ziplining through the jungle canopy 🧗", "Eating Kokoda (Fijian ceviche) 🍋"]},
-    "Amalfi Coast": {"tags": ["mild", "hot", "beach", "foodie", "luxury"], "color": "#FF8C00", "prompt": "amalfi coast italy cliffside colorful houses", 
-                     "acts": ["Driving a vintage Vespa along the cliffs 🛵", "Private boat tour to the Blue Grotto 🚤", "Eating endless Neapolitan Pizza 🍕", "Limoncello tasting at a lemon farm 🍋", "Cliff jumping into the Mediterranean 🌊", "Shopping for handmade leather in Positano 👡"]},
-    "Santorini": {"tags": ["hot", "beach", "relax", "culture"], "color": "#00008B", "prompt": "santorini greece white houses blue domes sunset", 
-                  "acts": ["Watching the world's best sunset in Oia 🌅", "Wine tasting on a volcanic cliff 🍷", "Sailing on a luxury catamaran ⛵", "Eating fresh Feta and Moussaka 🥗", "Hiking the caldera trail 🥾", "Swimming in the hot springs 🌋"]},
-    "Bali": {"tags": ["hot", "nature", "relax", "budget", "culture"], "color": "#2E8B57", "prompt": "bali indonesia rice terraces jungle temple", 
-             "acts": ["Swinging over the Tegallalang Rice Terraces 🌴", "Sunrise hike up Mount Batur volcano 🌋", "Getting a traditional Balinese massage 💆", "Eating spicy Nasi Goreng at a street warung 🍛", "Surfing the waves in Uluwatu 🏄", "Visiting the sacred Monkey Forest 🐒"]},
-    "Maui": {"tags": ["hot", "beach", "adventure", "nature"], "color": "#FF4500", "prompt": "maui hawaii tropical sunset surfing", 
-             "acts": ["Driving the winding Road to Hana 🚗", "Attending a traditional Hawaiian Luau 🌺", "Snorkeling in the Molokini Crater 🐠", "Eating massive plates of Garlic Shrimp 🍤", "Helicopter tour over Jurassic waterfalls 🚁", "Surfing at Ho'okipa Beach 🏄"]},
-    "Tokyo": {"tags": ["mild", "city", "foodie", "culture"], "color": "#FF003F", "prompt": "tokyo japan neon lights night city shibuya", 
-              "acts": ["Mario Kart street racing through Shibuya 🏎️", "Eating at a weird Robot Restaurant 🤖", "Early morning VIP Tsukiji Sushi tour 🍣", "Singing karaoke in a private high-rise room 🎤", "Wagyu beef tasting in a hidden alley 🥩", "Playing VR in Akihabara 🕹️"]},
-    "Kyoto": {"tags": ["mild", "city", "culture", "relax"], "color": "#8B0000", "prompt": "kyoto japan bamboo forest traditional temple", 
-              "acts": ["Walking the Arashiyama Bamboo Forest 🎋", "Secret Geisha tea ceremony 🍵", "Staying in a traditional Ryokan with an Onsen ♨️", "Eating a multi-course Kaiseki dinner 🍱", "Renting Kimonos and walking the shrines 👘", "Tasting 10 types of Matcha 🌿"]},
-    "New York City": {"tags": ["cold", "mild", "city", "foodie", "luxury"], "color": "#4682B4", "prompt": "new york city times square skyline night", 
-                      "acts": ["Helicopter tour over Manhattan 🚁", "Eating massive NY slices of pizza 🍕", "Ice skating in Central Park ⛸️", "Watching a Broadway show from VIP seats 🎭", "Drinking martinis in a speakeasy 🍸", "Shopping spree on 5th Avenue 🛍️"]},
-    "Paris": {"tags": ["mild", "city", "foodie", "luxury", "culture"], "color": "#C71585", "prompt": "paris france eiffel tower sunset romance", 
-              "acts": ["Midnight boat cruise on the Seine ⛴️", "Eating warm croissants and escargot 🥐", "Private tour of the Louvre 🎨", "Drinking champagne at the top of the Eiffel Tower 🥂", "Shopping in luxury boutiques 👗", "Eating a Michelin-star dinner 🍽️"]},
-    "London": {"tags": ["mild", "cold", "city", "culture"], "color": "#191970", "prompt": "london uk big ben thames river red bus", 
-               "acts": ["Riding the London Eye at sunset 🎡", "Eating Fish & Chips in a historic pub 🍟", "Watching the Changing of the Guard 💂", "Having a luxurious High Tea 🫖", "Shopping at Harrods 🛍️", "Taking a Jack the Ripper ghost tour 👻"]},
-    "Dubai": {"tags": ["hot", "city", "luxury", "adventure"], "color": "#D4AF37", "prompt": "dubai skyline burj khalifa luxury desert", 
-              "acts": ["Skydiving over the Palm Islands 🪂", "Dune bashing in a luxury 4x4 🏜️", "Having a 24-karat gold steak 🥩", "Skiing indoors in the desert ⛷️", "Yacht party in the Marina 🛥️", "Riding camels at sunset 🐪"]},
-    "Rome": {"tags": ["mild", "hot", "city", "foodie", "culture"], "color": "#A0522D", "prompt": "rome italy colosseum sunset ancient ruins", 
-             "acts": ["Gladiator training school ⚔️", "Eating Carbonara and endless Gelato 🍝", "Tossing a coin in the Trevi Fountain 🪙", "Private tour of the Vatican 🇻🇦", "Riding a Vespa past the Colosseum 🛵", "Drinking espresso like a local ☕"]},
-    "Barcelona": {"tags": ["mild", "hot", "city", "beach", "party"], "color": "#DC143C", "prompt": "barcelona spain sagrada familia colorful", 
-                  "acts": ["Eating incredible Tapas and Paella 🥘", "Drinking Sangria on the beach 🍷", "Exploring the bizarre Park Güell 🦎", "Dancing till dawn at a beach club 💃", "Sailing the Mediterranean ⛵", "Watching a live Flamenco show 🎸"]},
-    "Swiss Alps": {"tags": ["cold", "mountains", "adventure", "luxury"], "color": "#8B0000", "prompt": "swiss alps matterhorn snow cabin winter", 
-                   "acts": ["Skiing massive slopes in Zermatt ⛷️", "Eating bubbling Cheese Fondue 🫕", "Taking the Glacier Express train 🚂", "Paragliding over snowy valleys 🪂", "Tasting unlimited Swiss Chocolate 🍫", "Soaking in a hot thermal bath while it snows ♨️"]},
-    "Banff": {"tags": ["cold", "mountains", "nature", "adventure"], "color": "#2F4F4F", "prompt": "banff national park canada lake louise mountains", 
-              "acts": ["Canoeing on the turquoise Lake Louise 🛶", "Hiking to the spectacular tea houses 🥾", "Spotting wild Grizzly Bears 🐻", "Eating Canadian Poutine 🍟", "Ice walking in Johnston Canyon 🧊", "Helicopter tour over the Rockies 🚁"]},
-    "Patagonia": {"tags": ["cold", "mountains", "nature", "adventure"], "color": "#4682B4", "prompt": "patagonia mountains glacier rugged landscape", 
-                  "acts": ["Trekking the massive Perito Moreno Glacier 🧊", "Hiking the base of Mount Fitz Roy ⛰️", "Eating traditional Argentine Asado (BBQ) 🥩", "Drinking Mate tea with Gauchos 🧉", "Kayaking through marble caves 🛶", "Spotting wild Pumas 🐆"]},
-    "Antarctica": {"tags": ["cold", "nature", "adventure"], "color": "#000080", "prompt": "antarctica icebergs penguins extreme cold", 
-                   "acts": ["Doing the freezing Polar Plunge 🥶", "Walking through a colony of Emperor Penguins 🐧", "Kayaking past massive blue icebergs 🛶", "Drinking whiskey chilled with glacier ice 🥃", "Spotting breaching Humpback Whales 🐋", "Camping overnight in a snow trench ⛺"]},
-    "Iceland": {"tags": ["cold", "nature", "adventure", "relax"], "color": "#0B3D91", "prompt": "iceland northern lights volcano waterfall", 
-                "acts": ["Exploring a glittering blue Ice Cave 🧊", "Floating in the VIP Blue Lagoon 🧖‍♀️", "Chasing the Northern Lights ✨", "Trying Fermented Shark (Hakarl) 🦈", "Snowmobiling across a glacier ❄️", "Hiking to a live erupting volcano 🔥"]},
-    "Tromso": {"tags": ["cold", "nature", "adventure"], "color": "#000033", "prompt": "tromso norway snowy cabin northern lights", 
-               "acts": ["Dog sledding with Siberian Huskies 🐕", "Feeding wild Reindeer 🦌", "Sleeping in an Ice Hotel 🧊", "Eating hearty Reindeer Stew 🍲", "Whale watching in the freezing fjords 🐋", "Sitting by a fire under the Aurora Borealis ✨"]},
-    "Queenstown": {"tags": ["mild", "mountains", "adventure", "nature"], "color": "#556B2F", "prompt": "queenstown new zealand mountains lake extreme sports", 
-                   "acts": ["Bungee jumping off the Kawarau Bridge 🪂", "Jet boating at 90km/h through canyons 🚤", "Skydiving over the Remarkables 🦅", "Eating the famous Fergburger 🍔", "Wine tasting in Central Otago 🍷", "Hiking the brutal Ben Lomond track 🥾"]},
-    "Serengeti": {"tags": ["hot", "nature", "adventure", "luxury"], "color": "#CD853F", "prompt": "serengeti safari tanzania lions sunset plains", 
-                  "acts": ["Hot air ballooning over the plains at dawn 🎈", "Open-top 4x4 Safari to spot Lions 🦁", "Staying in a luxury tented camp ⛺", "Eating dinner by a massive campfire 🥩", "Visiting a traditional Maasai village 🛖", "Spotting massive herds of elephants 🐘"]},
-    "Madagascar": {"tags": ["hot", "nature", "adventure", "budget"], "color": "#228B22", "prompt": "madagascar baobab trees wild nature lemur", 
-                   "acts": ["Night safari to spot elusive Aye-Ayes 🔦", "Sunset walk down Baobab Avenue 🌅", "Climbing the razor-sharp Tsingy rocks 🪨", "Trekking to find dancing Lemurs 🐒", "Eating Zebu Steak over a fire 🥩", "Snorkeling in Nosy Be 🏖️"]},
-    "Costa Rica": {"tags": ["hot", "nature", "adventure", "relax"], "color": "#006400", "prompt": "costa rica jungle waterfall sloth volcano", 
-                   "acts": ["Superman Ziplining 1000ft above the jungle 🧗", "Cuddling rescued Sloths 🦥", "Surfing in Tamarindo 🏄", "Bathing in Arenal's hot springs 🌋", "Eating Gallo Pinto and fresh ceviche 🍳", "Night hike to spot red-eyed tree frogs 🐸"]},
-    "Amazon Rainforest": {"tags": ["hot", "nature", "adventure"], "color": "#004d00", "prompt": "amazon rainforest river jungle wild green", 
-                          "acts": ["Fishing for terrifying Piranhas 🐟", "Riverboat cruise down the mighty Amazon ⛴️", "Spotting Pink River Dolphins 🐬", "Jungle survival training with an indigenous guide 🌿", "Eating exotic Amazonian fruits like Cupuaçu 🥥", "Night canoe trip to spot Caimans 🐊"]},
-    "Galapagos": {"tags": ["hot", "nature", "adventure", "relax"], "color": "#20B2AA", "prompt": "galapagos islands giant tortoise pristine beach", 
-                  "acts": ["Snorkeling with playful Sea Lions 🦭", "Walking alongside Giant Tortoises 🐢", "Scuba diving with Hammerhead Sharks 🦈", "Spotting blue-footed boobies 🐦", "Hiking a volcanic crater 🌋", "Eating fresh Ecuadorian ceviche 🐟"]},
-    "Australian Outback": {"tags": ["hot", "nature", "adventure"], "color": "#B8860B", "prompt": "uluru australian outback red dirt kangaroo", 
-                           "acts": ["Watching the sunset over Uluru rock 🌅", "Camping in a swag under a billion stars ✨", "Eating Kangaroo steak 🥩", "Off-roading in a massive 4x4 🚙", "Learning to throw a Boomerang 🪃", "Helicopter ride over the red desert 🚁"]},
-    "Kruger National Park": {"tags": ["hot", "nature", "adventure", "luxury"], "color": "#8B4513", "prompt": "kruger national park south africa safari leopard", 
-                             "acts": ["Tracking the Big 5 on foot 🦏", "Sleeping in a luxury treehouse 🌳", "Eating a traditional Braai BBQ 🥩", "Sunset game drive with gin and tonics 🍸", "Watching elephants drink from the river 🐘", "Spotting a leopard in a tree 🐆"]},
-    "Peru (Inca Trail)": {"tags": ["mild", "mountains", "adventure", "culture"], "color": "#A0522D", "prompt": "machu picchu peru mountains ancient ruins", 
-                          "acts": ["Hiking the grueling 4-day Inca Trail 🥾", "Taking selfies with Alpacas 🦙", "Eating world-class Peruvian Ceviche 🐟", "Sleeping in a glass pod hanging off a cliff 🧗", "Drinking Pisco Sours 🍹", "Exploring the Sacred Valley on mountain bikes 🚵"]},
-    "Egypt (Pyramids)": {"tags": ["hot", "culture", "adventure"], "color": "#DAA520", "prompt": "egypt pyramids giza desert camels", 
-                         "acts": ["Going inside the Great Pyramid 🔺", "Cruising down the Nile River 🚢", "Riding a camel through the desert 🐪", "Eating authentic Shawarma and Falafel 🥙", "Scuba diving in the Red Sea 🤿", "Exploring the Valley of the Kings 👑"]},
-    "Petra": {"tags": ["hot", "culture", "adventure"], "color": "#CD5C5C", "prompt": "petra jordan ancient city red rocks", 
-              "acts": ["Walking through the narrow Siq canyon 🚶", "Seeing the Treasury lit by thousands of candles ✨", "Floating effortlessly in the Dead Sea 🌊", "Eating massive plates of Mansaf 🍛", "Sleeping in a Bedouin desert camp in Wadi Rum ⛺", "Riding a 4x4 across the Martian desert 🚙"]},
-    "Marrakesh": {"tags": ["hot", "city", "culture", "foodie"], "color": "#B22222", "prompt": "marrakesh morocco colorful market medina", 
-                  "acts": ["Getting lost in the chaotic souks (markets) 🛍️", "Sleeping in a stunning traditional Riad 🕌", "Eating Tagine cooked in clay pots 🍲", "Getting a scrub in a local Hammam spa 🧼", "Drinking sweet Mint Tea 🍵", "Riding a hot air balloon over the Atlas Mountains 🎈"]},
-    "Istanbul": {"tags": ["mild", "city", "culture", "foodie"], "color": "#483D8B", "prompt": "istanbul turkey grand bazaar mosques sunset", 
-                 "acts": ["Exploring the massive Grand Bazaar 🏺", "Eating Turkish Delight and Baklava 🍯", "Taking a ferry across the Bosphorus ⛴️", "Eating a massive Turkish Kebab 🍖", "Smoking a hookah pipe in a cafe 💨", "Visiting the breathtaking Hagia Sophia 🕌"]},
-    "Havana": {"tags": ["hot", "city", "culture", "party"], "color": "#C71585", "prompt": "havana cuba vintage cars colorful streets", 
-               "acts": ["Riding in a bright pink 1950s convertible 🚗", "Smoking an authentic Cuban Cigar 💨", "Drinking Mojitos and Daquiris 🍹", "Dancing Salsa in the streets 💃", "Eating Ropa Vieja (shredded beef) 🍛", "Walking the Malecon seawall at sunset 🌅"]},
-    "Angkor Wat": {"tags": ["hot", "culture", "nature", "adventure"], "color": "#556B2F", "prompt": "angkor wat cambodia ancient temple jungle", 
-                   "acts": ["Watching the sunrise over the massive temple 🌅", "Exploring the Tomb Raider jungle ruins 🌿", "Eating Fish Amok curry 🍛", "Getting blessed by a Buddhist Monk 🙏", "Riding a tuk-tuk through the dirt roads 🛺", "Taking a boat through floating villages 🛶"]},
-    "Kathmandu": {"tags": ["mild", "mountains", "adventure", "culture"], "color": "#8B0000", "prompt": "kathmandu nepal temples himalayas prayer flags", 
-                  "acts": ["Helicopter tour to Everest Base Camp 🚁", "Eating massive plates of Momo dumplings 🥟", "Spinning prayer wheels at Swayambhunath 🛕", "Bungee jumping into a river gorge 🪂", "Shopping for pashminas in Thamel 🧣", "Trekking the Annapurna circuit 🥾"]},
-    "Taj Mahal": {"tags": ["hot", "culture", "city", "foodie"], "color": "#FF4500", "prompt": "taj mahal india beautiful architecture sunset", 
-                  "acts": ["Seeing the Taj Mahal at sunrise 🌅", "Eating insanely spicy Butter Chicken and Naan 🍛", "Riding a rickshaw through chaotic streets 🛺", "Attending a colorful Hindu festival 🎉", "Shopping for vibrant spices and silks 🌶️", "Seeing wild tigers in Ranthambore 🐅"]},
-    "San Francisco": {"tags": ["mild", "city", "foodie", "culture"], "color": "#1E90FF", "prompt": "san francisco golden gate bridge cable car", 
-                      "acts": ["Hanging off a moving Cable Car 🚃", "Eating clam chowder in a sourdough bowl 🦀", "Terrifying Alcatraz ghost tour 👻", "Biking across the Golden Gate Bridge 🚲", "Skydiving over the Bay 🪂", "Wine tasting in Napa Valley 🍷"]},
-    "Las Vegas": {"tags": ["hot", "city", "party", "luxury"], "color": "#800080", "prompt": "las vegas neon lights casinos night", 
-                  "acts": ["Gambling high stakes at the Bellagio 🎰", "Watching a Cirque du Soleil show 🎪", "Eating at a Gordon Ramsay restaurant 🥩", "Helicopter tour into the Grand Canyon 🚁", "Partying at a massive pool club 🍾", "Driving supercars on a racetrack 🏎️"]},
-    "Miami": {"tags": ["hot", "beach", "party", "luxury"], "color": "#FF1493", "prompt": "miami south beach neon lights palm trees", 
-              "acts": ["Sunbathing on South Beach 🏖️", "Riding an airboat through the Everglades looking for gators 🐊", "Eating Cuban sandwiches in Little Havana 🥪", "Clubbing until 6 AM 🪩", "Renting a luxury yacht 🛥️", "Rollerblading down Ocean Drive 🛼"]},
-    "Yellowstone": {"tags": ["cold", "mild", "nature", "adventure"], "color": "#A0522D", "prompt": "yellowstone geyser bison nature rugged", 
-                    "acts": ["Watching Old Faithful erupt 💦", "Spotting wild Bison and Wolves 🐺", "Hiking around the Grand Prismatic Spring 🌈", "Camping in the wilderness ⛺", "Eating campfire chili 🥣", "Fly fishing in freezing rivers 🎣"]},
-    "Rio de Janeiro": {"tags": ["hot", "beach", "party", "culture"], "color": "#32CD32", "prompt": "rio de janeiro christ the redeemer beach sunset", 
-                       "acts": ["Taking the cable car up Sugarloaf Mountain 🚠", "Sunning on Copacabana Beach 🏖️", "Dancing Samba at a street carnival 💃", "Eating endless meats at a Churrascaria 🥩", "Hang gliding over the city 🪂", "Drinking Caipirinhas by the ocean 🍹"]},
-    "Phuket": {"tags": ["hot", "beach", "party", "budget"], "color": "#FF8C00", "prompt": "phuket thailand longtail boat beach limestone", 
-               "acts": ["Partying at the Full Moon Festival 🌕", "Feeding rescued elephants 🐘", "Scuba diving with Whale Sharks 🦈", "Eating spicy Pad Thai on the street 🍜", "Getting a painful Thai massage 💆", "Taking a boat to Phi Phi Island 🛶"]},
-    "Seoul": {"tags": ["mild", "city", "foodie", "culture"], "color": "#4B0082", "prompt": "seoul south korea neon lights palace", 
-              "acts": ["Eating endless Korean BBQ 🥩", "Getting scrubbed at a Korean Bathhouse (Jjimjilbang) 🧖", "Singing K-Pop Karaoke 🎤", "Wearing traditional Hanboks at a palace 👘", "Drinking Soju in a street tent 🍶", "Shopping for high-end skincare 🧴"]},
-    "Singapore": {"tags": ["hot", "city", "luxury", "foodie"], "color": "#8B008B", "prompt": "singapore marina bay sands supertrees", 
-                  "acts": ["Swimming in the Marina Bay Sands infinity pool 🏊", "Eating Michelin-star street food 🍜", "Walking through the glowing Supertree Grove 🌳", "Drinking a Singapore Sling 🍹", "Night safari at the zoo 🐅", "Shopping in luxury mega-malls 🛍️"]},
-    "Cape Town": {"tags": ["mild", "beach", "adventure", "nature"], "color": "#CD853F", "prompt": "cape town table mountain ocean sunset", 
-                  "acts": ["Cage diving with Great White Sharks 🦈", "Hiking up Table Mountain ⛰️", "Walking with wild penguins at Boulders Beach 🐧", "Wine tasting in Stellenbosch 🍷", "Eating South African Biltong 🥩", "Paragliding over the coastline 🪂"]},
-    "Amsterdam": {"tags": ["mild", "city", "culture", "party"], "color": "#FF4500", "prompt": "amsterdam canals bicycles sunset houses", 
-                  "acts": ["Renting a bike and dodging traffic 🚲", "Taking a canal boat cruise 🛶", "Eating warm Stroopwafels 🧇", "Visiting the Van Gogh Museum 🎨", "Exploring the nightlife 🍻", "Eating massive Gouda cheese wheels 🧀"]},
-    "Tulum": {"tags": ["hot", "beach", "party", "culture"], "color": "#20B2AA", "prompt": "tulum mexico beach cenote ancient ruins", 
-              "acts": ["Swimming in underground crystal Cenotes 🤿", "Exploring ancient Mayan beach ruins 🏛️", "Eating massive plates of street Tacos 🌮", "Drinking Mezcal at a jungle rave 🍸", "Yoga on the beach at sunrise 🧘", "Swimming with giant sea turtles 🐢"]}
-}
+---------------------------------------------------------
+2. 100 HIGHLY RESEARCHED DESTINATIONS DATABASE
+---------------------------------------------------------
+Keys: t=tags, c=color, p=prompt, f=food(2), d=drinks(2), cu=cute(2), e=epic(6)
+dests = {
+# EUROPE
+"Paris": {"t":["mild","city","culture","foodie","luxury","romance"],"c":"#C71585","p":"paris eiffel tower sunset romance",
+"f":["Michelin-star dinner at Le Jules Verne","Fresh savory crepes from a street vendor in Montmartre"],
+"d":["Champagne atop the Eiffel Tower","Absinthe in a hidden 1920s speakeasy"],
+"cu":["Painting class along the Seine","Finding hidden bookstores in the Latin Quarter"],
+"e":["Private helicopter over Versailles","VIP night tour of the Louvre","Secret access to the underground Catacombs","Baking class with a master patissier","Seine dinner cruise on a private yacht","Attending a cabaret at Moulin Rouge"]},
+"Rome": {"t":["mild","hot","city","culture","foodie"],"c":"#A0522D","p":"rome colosseum ancient sunset",
+"f":["10-course truffle tasting menu near the Pantheon","Massive slice of Roman pizza al taglio from a hole-in-the-wall"],
+"d":["Vintage Barolo wine tasting in an ancient cellar","Aperol Spritz on a rooftop overlooking Piazza Navona"],
+"cu":["Throwing a coin in the Trevi Fountain at midnight","Eating gelato on the Spanish Steps"],
+"e":["Gladiator training school on the Appian Way","Private after-hours tour of the Sistine Chapel","Vespa tour through the chaotic Roman traffic","Exploring the ancient crypts made of bones","Pasta making class with a real Italian Nonna","Helicopter tour over the ancient ruins"]},
+"Swiss Alps (Zermatt)": {"t":["cold","mountains","adventure","luxury","nature"],"c":"#8B0000","p":"zermatt matterhorn snow cabin",
+"f":["Gourmet dining at a 5-star high-altitude restaurant","Massive pot of bubbling cheese fondue in a wooden chalet"],
+"d":["Dom Pérignon in an outdoor heated jacuzzi","Hot spiced Glühwein by a roaring fire"],
+"cu":["Building a snowman overlooking the Matterhorn","Riding a horse-drawn sleigh through the village"],
+"e":["Helicopter drop-off for extreme off-piste skiing","Paragliding over the snowy peaks","Ice climbing up a frozen waterfall","Riding the Glacier Express train","Sleeping in an actual Igloo Village","Bungee jumping off a dam like James Bond"]},
+"Santorini": {"t":["hot","beach","relax","luxury","romance"],"c":"#00008B","p":"santorini white houses blue domes sunset",
+"f":["Private clifftop dining with fresh lobster","Gyros from a bustling local taverna"],
+"d":["Wine tasting in a volcanic cave vineyard","Cocktails on a luxury catamaran at sunset"],
+"cu":["Wandering the white cobblestone streets of Oia","Finding a secluded spot for the perfect sunset photo"],
+"e":["Sailing a yacht to the volcanic hot springs","Scuba diving in the deep caldera","Helicopter ride over the Greek Islands","Renting ATVs to explore hidden black sand beaches","Private photoshoot with flying dresses","Exploring the ancient ruins of Akrotiri"]},
+"London": {"t":["mild","cold","city","culture","party"],"c":"#191970","p":"london big ben red bus thames",
+"f":["High-end dining at The Shard","Classic Fish & Chips wrapped in paper at a pub"],
+"d":["Cocktails at the eccentric Sketch bar","Pints of ale in a 400-year-old tavern"],
+"cu":["Feeding the pelicans in St. James's Park","Browsing quirky antiques at Portobello Road"],
+"e":["VIP pod on the London Eye with champagne","Private Jack the Ripper night walking tour","Climbing over the top of the O2 Arena","Attending a West End theatre premiere","Speedboating down the River Thames","Touring the hidden underground Churchill War Rooms"]},
+"Amalfi Coast": {"t":["hot","beach","foodie","luxury","romance"],"c":"#FF8C00","p":"amalfi coast cliffside colorful houses sea",
+"f":["Michelin-star seafood overlooking the cliffs","Massive Neapolitan pizza in a local piazza"],
+"d":["Limoncello tasting straight from a lemon farm","Prosecco on a private vintage wooden boat"],
+"cu":["Shopping for handmade leather sandals","Eating lemon sorbet inside a real giant lemon"],
+"e":["Driving a vintage convertible along the terrifying coastal roads","Swimming into the sparkling Blue Grotto","Helicopter tour of Mount Vesuvius","Hiking the breathtaking Path of the Gods","Private cooking class in a cliffside villa","Chartering a yacht to the island of Capri"]},
+"Iceland (Reykjavik)": {"t":["cold","nature","adventure","relax"],"c":"#0B3D91","p":"iceland northern lights glacier waterfalls",
+"f":["High-end Nordic tasting menu","Trying fermented shark (Hakarl) and a hot dog from a stand"],
+"d":["Brennivín (Black Death) shots in an ice bar","Blue lagoon cocktails while floating in the thermal water"],
+"cu":["Petting fluffy Icelandic horses","Searching for hidden elf houses in the rocks"],
+"e":["Exploring deep inside a glittering blue Ice Cave","Snowmobiling across a massive glacier","Chasing the Northern Lights in a Super-Jeep","Snorkeling between two tectonic plates in freezing water","Hiking up to a live, flowing volcano","Walking behind the roaring Seljalandsfoss waterfall"]},
+"Amsterdam": {"t":["mild","city","culture","party"],"c":"#FF4500","p":"amsterdam canals bicycles sunset",
+"f":["Gourmet Dutch tasting menu in a greenhouse","Eating hot Stroopwafels fresh off the iron"],
+"d":["Heineken VIP brewing experience","Jenever tasting in a dimly lit 17th-century tasting room"],
+"cu":["Browsing the floating flower market","Having a picnic in Vondelpark"],
+"e":["Renting a private canal boat with endless drinks","Cycling through the tulip fields of Keukenhof","Exploring the secret annex of Anne Frank","Partying at a massive underground techno warehouse","Touring the bizarre and wild Red Light District","Eating a massive wheel of authentic Gouda cheese"]},
+"Barcelona": {"t":["hot","city","beach","party","culture"],"c":"#DC143C","p":"barcelona sagrada familia colorful gaudi",
+"f":["Avant-garde molecular gastronomy","Endless massive pans of seafood Paella"],
+"d":["Sangria tasting on a luxury rooftop","Cava in a historic underground cellar"],
+"cu":["Finding the hidden mosaics in Park Güell","Watching street performers on La Rambla"],
+"e":["Sailing a catamaran on the Mediterranean at sunset","VIP tour of the unfinished Sagrada Familia","Attending a live, passionate Flamenco show","Helicopter ride over the coastline","Dancing until 6 AM at a massive beach club","Taking a hot air balloon over Catalonia"]},
+"Venice": {"t":["mild","city","romance","culture"],"c":"#008080","p":"venice canals gondola sunset romance",
+"f":["Romantic seafood dinner on a floating terrace","Cicchetti (Venetian tapas) in a crowded local bacaro"],
+"d":["Bellinis at the famous Harry's Bar","Spritz in St. Mark's Square listening to the orchestra"],
+"cu":["Getting lost in the tiny alleyways","Watching a glassblower in Murano"],
+"e":["Private sunset Gondola ride with a serenader","Attending a masquerade ball in a grand palazzo","Kayaking through the quiet, hidden canals","VIP tour of the Doge's Palace secret passages","Taking a water taxi across the lagoon at high speed","Making your own authentic Carnival mask"]},
+"Scottish Highlands": {"t":["cold","mild","mountains","nature","adventure"],"c":"#2E8B57","p":"scottish highlands castle loch fog mountains",
+"f":["Gourmet venison at a luxury castle","Traditional Haggis, Neeps, and Tatties by a pub fire"],
+"d":["Tasting 50-year-old single malt Scotch whisky","Pints of heavy ale in a 16th-century inn"],
+"cu":["Spotting highland cows (hairy coos)","Searching the loch for the Loch Ness Monster"],
+"e":["Sleeping in a massive historic haunted castle","Riding the real Hogwarts Express steam train","Hiking the dramatic ridges of Glencoe","Sea kayaking with wild seals","Off-roading in a Land Rover through the mud","Learning archery and falconry on a noble estate"]},
+"Prague": {"t":["cold","mild","city","culture","party"],"c":"#B22222","p":"prague charles bridge castle sunset",
+"f":["Fine dining overlooking the Vltava river","Eating a massive roasted pork knuckle in a beer hall"],
+"d":["Drinking absurdly cheap, world-class Pilsner","Absinthe tasting in a dark, gothic basement"],
+"cu":["Watching the medieval Astronomical Clock chime","Walking the Charles Bridge at dawn"],
+"e":["Taking a ghost and legends night tour","Shooting AK-47s at an underground range","Bathing in a literal tub of dark beer at a Beer Spa","Cruising the river on a jazz boat","Attending a classical concert in a 14th-century church","Exploring a nuclear bunker from the Cold War"]},
+"Lapland (Finland)": {"t":["cold","nature","adventure","relax"],"c":"#F0F8FF","p":"lapland snow igloo northern lights reindeer",
+"f":["Luxury Arctic tasting menu","Hearty Reindeer stew cooked over a campfire"],
+"d":["Cloudberry liquor in an ice glass","Hot cocoa while wrapped in reindeer hides"],
+"cu":["Meeting the real Santa Claus","Feeding wild, gentle reindeer"],
+"e":["Sleeping in a glass igloo under the Northern Lights","Driving a team of huskies on a sled through the forest","Icebreaker cruise where you swim in the freezing sea","Snowmobiling across massive frozen lakes","Ice fishing and cooking your catch","Getting whipped with birch branches in a traditional sauna"]},
+"Ibiza": {"t":["hot","beach","party","luxury"],"c":"#FF1493","p":"ibiza beach party neon sunset ocean",
+"f":["VIP dining at a superclub","Fresh grilled octopus at a quiet, hidden cove"],
+"d":["Bottle service with sparklers at Pacha","Hierbas liqueur at a bohemian beach shack"],
+"cu":["Shopping at the hippie markets","Watching the sunset at Es Vedra with bongos"],
+"e":["Dancing until 8 AM with the world's biggest DJs","Chartering a luxury yacht to Formentera","Cliff jumping into the crystal clear Mediterranean","Parasailing high above the party beaches","Exploring hidden sea caves on a paddleboard","Attending an exclusive, secret villa afterparty"]},
+"Dubrovnik": {"t":["hot","beach","city","culture"],"c":"#D2691E","p":"dubrovnik croatia kings landing walls sea",
+"f":["Upscale Mediterranean dining on the cliffs","Eating black squid ink risotto in the old town"],
+"d":["Cocktails at a bar literally clinging to the cliffside","Local Rakija shots with a fisherman"],
+"cu":["Finding the 'Game of Thrones' Walk of Shame steps","Petting the hundreds of street cats"],
+"e":["Walking the massive ancient city walls at sunset","Sea kayaking to the cursed island of Lokrum","Taking a cable car up Mount Srd for insane views","Sailing the Elaphiti Islands on a pirate ship","Cliff jumping at Buza Bar","Ziplining over the coastal mountains"]},
+"Vienna": {"t":["mild","cold","city","culture","luxury"],"c":"#FFD700","p":"vienna austria palaces classical music",
+"f":["Dining like royalty in a Habsburg palace","Eating authentic Wiener Schnitzel larger than your plate"],
+"d":["Sipping elegant Viennese coffee in a grand cafe","Drinking local Gruner Veltliner wine in a vineyard heuriger"],
+"cu":["Eating a slice of the famous Sachertorte","Watching the Lipizzaner dancing horses"],
+"e":["Attending a grand ball in a tuxedo/gown","Listening to Mozart performed in a golden hall","Riding the giant historic Ferris wheel (Riesenrad)","Touring the massive Schönbrunn Palace","Visiting the creepy catacombs of St. Stephen's","Taking a horse-drawn fiaker ride at night"]},
+"Tromso": {"t":["cold","nature","adventure","mountains"],"c":"#000033","p":"tromso norway snowy fjords aurora",
+"f":["Arctic fine dining with king crab","Eating dried fish like a true Viking"],
+"d":["Aquavit tasting in the world's northernmost brewery","Hot toddies on a silent electric whale watching boat"],
+"cu":["Riding the Fjellheisen cable car for sunset views","Warming up in a cozy, candlelit cafe"],
+"e":["Chasing the Northern Lights in the arctic wilderness","Whale watching for massive Orcas in the fjords","Dog sledding across the frozen tundra","Snowshoeing through silent, snowy valleys","Sleeping in a remote, rustic wilderness cabin","Feeding reindeer with indigenous Sami people"]},
+"Lisbon": {"t":["hot","mild","city","beach","culture"],"c":"#FFD700","p":"lisbon portugal trams colorful hills",
+"f":["Michelin-star modern Portuguese cuisine","Eating massive Bifana pork sandwiches on the street"],
+"d":["Port wine tasting in an upscale cellar","Drinking Ginjinha (cherry liquor) from a chocolate cup"],
+"cu":["Eating warm Pasteis de Nata (custard tarts)","Riding the historic yellow Tram 28"],
+"e":["Surfing the massive waves of nearby Cascais","Sailing on the Tagus River at sunset","Listening to melancholic, live Fado music in a dark tavern","Exploring the fairytale castles of Sintra","Taking an electric tuk-tuk tour up the steep hills","Partying in the vibrant Bairro Alto district"]},
+"Munich": {"t":["mild","cold","city","party","culture"],"c":"#8B4513","p":"munich germany bavaria beer hall architecture",
+"f":["Gourmet Bavarian cuisine","Eating giant pretzels and bratwurst"],
+"d":["Drinking from 1-liter steins at Oktoberfest","Tasting crisp Riesling in a wine garden"],
+"cu":["Watching the Glockenspiel figures dance","Surfing the standing wave in the English Garden"],
+"e":["Partying with thousands in a massive beer tent","Touring the fairytale Neuschwanstein Castle","Driving a Porsche on the Autobahn at 150mph","Exploring the dark history at Dachau","Hiking the nearby Bavarian Alps","Taking a spooky night watchman tour"]},
+"Svalbard": {"t":["cold","nature","adventure","mountains"],"c":"#E0FFFF","p":"svalbard polar bears arctic ice",
+"f":["Gourmet dining at the edge of the world","Eating freeze-dried expedition meals in a tent"],
+"d":["Champagne tasting in a coal miner's cellar","Drinking pure melted glacier water"],
+"cu":["Mailing a letter from the world's northernmost post office","Spotting arctic foxes playing in the snow"],
+"e":["Armed expedition to safely spot wild Polar Bears","Exploring the Global Seed Vault (from the outside)","Snowmobiling to an abandoned Soviet ghost town","Ice caving inside a massive glacier","Kayaking in freezing waters past walruses","Experiencing 24 hours of total darkness (or total sunlight)"]},
 
-# ---------------------------------------------------------
-# 3. 20 QUESTIONS ENGINE
-# ---------------------------------------------------------
-# We use tags to build a profile. Each answer adds points to specific tags.
-questions = [
-    {"q": "1. What is your absolute ideal morning? 🌅", "opts": {"Sleeping in until noon on 1000-thread count sheets": {"luxury": 3, "relax": 3, "adventure": -2}, "Up at 5 AM, putting on war paint, ready to conquer": {"adventure": 3, "nature": 2, "relax": -2}, "Grabbing an artisanal coffee and hitting busy streets": {"city": 3, "culture": 2, "nature": -1}}},
-    {"q": "2. Pick an animal companion for the trip 🐾", "opts": {"A cuddly baby sea turtle": {"beach": 3, "nature": 1}, "A mischievous monkey or lemur": {"nature": 3, "adventure": 1, "hot": 1}, "A fluffy waddling penguin or husky": {"cold": 4, "nature": 2}, "A stray cat outside a cafe": {"city": 2, "culture": 1}}},
-    {"q": "3. How do you feel about extreme heights? 🎢", "opts": {"Love them! Throw me out of a plane right now!": {"adventure": 3, "mountains": 1}, "Only if I'm safely looking out a high-rise window": {"city": 2, "luxury": 1}, "Keep my feet firmly on the ground, thanks": {"relax": 2, "beach": 1}}},
-    {"q": "4. Pick a flavor profile that makes you drool! 👅", "opts": {"Fresh, tropical, sweet, and fruity": {"hot": 2, "beach": 2}, "Savory, rich, carb-heavy, and comforting": {"mild": 2, "cold": 1, "foodie": 3}, "Spicy, exotic, and totally weird": {"foodie": 3, "culture": 2}, "High-end, expensive, Michelin-star meats": {"luxury": 3, "foodie": 1}}},
-    {"q": "5. What’s your ideal footwear for this trip? 👟", "opts": {"Barefoot or designer flip flops": {"beach": 4, "hot": 2}, "Heavy duty, mud-covered hiking boots": {"mountains": 3, "nature": 2, "adventure": 2}, "Stylish sneakers for walking 20k steps": {"city": 3, "culture": 1}, "Thick thermal insulated snow boots": {"cold": 4, "mountains": 1}}},
-    {"q": "6. Choose a magical item to take with you ✨", "opts": {"Invisibility cloak (for epic people watching)": {"city": 2, "culture": 2}, "A teleportation ring (to skip the grueling hike)": {"relax": 3, "luxury": 1}, "An endless bottle of perfect vintage wine": {"foodie": 2, "relax": 1, "mild": 1}, "A magic amulet that keeps you perfectly warm": {"cold": 3, "adventure": 1}}},
-    {"q": "7. What’s your evening vibe? 🌙", "opts": {"Dancing until dawn under neon lights or beach fires": {"party": 4, "city": 1, "beach": 1}, "A wildly romantic candlelit dinner by the water": {"luxury": 2, "relax": 2}, "Staring at the Milky Way by a campfire": {"nature": 3, "adventure": 1}, "Passing out from sheer physical exhaustion": {"adventure": 3, "mountains": 1}}},
-    {"q": "8. Weather preference? ☀️❄️", "opts": {"Roasting hot, give me a deep tan": {"hot": 4, "cold": -4}, "Brisk and freezing, I want snow and ice": {"cold": 4, "hot": -4}, "Mild, breezy, and perfect for a light jacket": {"mild": 4, "hot": -1, "cold": -1}}},
-    {"q": "9. How do you handle getting lost? 🗺️", "opts": {"Panic slightly but find a cute cafe": {"city": 2, "mild": 1}, "Ask locals and end up at a crazy underground party": {"party": 3, "culture": 2}, "I don't get lost, I go on survival adventures": {"adventure": 3, "nature": 2}, "I literally can't get lost, I have a private butler": {"luxury": 4, "adventure": -2}}},
-    {"q": "10. Pick a movie genre for your life right now 🎬", "opts": {"Romantic Comedy in a beautiful dress": {"city": 2, "relax": 1, "luxury": 1}, "High-Octane Action / Thriller": {"adventure": 3, "party": 1}, "Sci-Fi / Cyberpunk / Futuristic": {"city": 3, "culture": 1}, "Epic Fantasy / Lord of the Rings": {"mountains": 3, "nature": 2}}},
-    {"q": "11. Choose a baller mode of transport 🚀", "opts": {"A Mega Luxury Yacht": {"luxury": 3, "beach": 2, "hot": 1}, "A Private Helicopter over mountains": {"mountains": 3, "luxury": 2, "cold": 1}, "A 300mph Bullet Train": {"city": 3, "culture": 1}, "A rugged 4x4 Jeep covered in mud": {"adventure": 3, "nature": 2, "hot": 1}}},
-    {"q": "12. How much luggage are you bringing? 🧳", "opts": {"Just a dusty backpack, keep it rugged": {"adventure": 3, "budget": 3, "luxury": -3}, "One perfectly curated stylish suitcase": {"city": 2, "mild": 1}, "Three massive trunks of designer outfits": {"luxury": 4, "relax": 1, "budget": -3}}},
-    {"q": "13. Pick a historical era to visit 🕰️", "opts": {"Ancient Empires (Samurai, Romans, Incas)": {"culture": 4, "city": 1}, "The Wild, Untamed Prehistoric Age": {"nature": 4, "adventure": 2}, "The glamorous roaring 1920s": {"city": 2, "luxury": 2, "party": 1}, "The distant, shiny Cyber-Future": {"city": 3, "luxury": 1}}},
-    {"q": "14. What's your budget style? 💸", "opts": {"Unlimited wealth. Spoil me rotten.": {"luxury": 5, "budget": -5}, "A healthy mix of cheap street food and one fancy splurge": {"foodie": 3, "culture": 1}, "I just need a tent, some rice, and good vibes": {"budget": 5, "nature": 2, "luxury": -5}}},
-    {"q": "15. Water or Land? 🌊🌍", "opts": {"Oceans, lakes, and rivers! Get me wet!": {"beach": 4}, "Mountains, forests, and towering cities!": {"mountains": 2, "city": 2}, "A perfect mix of both!": {"nature": 2, "relax": 1}}},
-    {"q": "16. Choose a color palette to look at 🎨", "opts": {"Blinding Neon pinks and bright blues": {"city": 2, "party": 2}, "Earthy jungle greens and dirt browns": {"nature": 3, "adventure": 1}, "Ocean blues and golden sunset oranges": {"beach": 3, "relax": 2}, "Blinding icy whites and dark blacks": {"cold": 4, "mountains": 2}}},
-    {"q": "17. Pick a travel snack right now 🥨", "opts": {"A freshly baked, warm, flaky pastry": {"city": 2, "culture": 1, "foodie": 1}, "A massive plate of exotic tropical fruit": {"hot": 2, "beach": 1}, "A hardcore energy bar or trail mix": {"adventure": 3, "mountains": 2}, "Matcha KitKats or crazy flavored chips": {"city": 2, "culture": 2}}},
-    {"q": "18. What's your absolute worst nightmare on holiday? 😱", "opts": {"No WiFi or cell service for days": {"city": 3, "luxury": 1}, "Getting a terrible sunburn": {"cold": 2, "mild": 2, "beach": -2}, "A wild venomous animal in my tent": {"city": 2, "nature": -3}, "Freezing my toes off": {"hot": 4, "cold": -4}}},
-    {"q": "19. Choose a sound to fall asleep to 🎧", "opts": {"Crashing warm ocean waves": {"beach": 4, "relax": 2}, "Jungle insects and distant animal roars": {"nature": 4, "hot": 1}, "City traffic, sirens, and train hums": {"city": 4, "culture": 1}, "Fierce howling blizzard winds": {"cold": 4, "mountains": 2}}},
-    {"q": "20. Finally, what is the ULTIMATE goal of this trip? 🎯", "opts": {"To relax so hard I forget my own name": {"relax": 5, "adventure": -3}, "To push my physical limits and feel alive": {"adventure": 5, "relax": -3}, "To eat absolutely EVERYTHING in sight": {"foodie": 5}, "To take insane photos and show off": {"luxury": 2, "party": 2, "culture": 1}}},
-]
+# ASIA
+"Tokyo": {"t":["mild","city","foodie","culture","party"],"c":"#FF003F","p":"tokyo neon night city shibuya",
+"f":["latex
+500 Omakase sushi masterclass","Slurping rich Tonkotsu ramen in a tiny booth"], "d":["High-end whiskey in a slick sky-bar (Lost in Translation)","Sake in a tiny, smoky Golden Gai alley bar"], "cu":["Playing claw machines in an arcade","Petting hedgehogs at an animal cafe"], "e":["Real-life Mario Kart racing through Shibuya crossing","Watching a brutal sumo wrestling tournament live","Attending the insane, flashy Robot Restaurant show","Exploring digital art at teamLab Planets","Singing Karaoke in a private room with endless drinks","Taking a helicopter tour over the neon skyline"]}, "Kyoto": {"t":["mild","city","culture","relax"],"c":"#8B0000","p":"kyoto japan bamboo forest temple traditional", "f":["Multi-course exquisite Kaiseki dinner","Eating green tea soft serve on the street"], "d":["Secret Geisha tea ceremony","Tasting 20 different types of Matcha"], "cu":["Walking the magical Arashiyama Bamboo Forest","Feeding the bowing deer in nearby Nara"], "e":["Sleeping in a traditional Ryokan on tatami mats","Bathing naked in a natural outdoor Onsen","Renting kimonos and walking the red Torii gates of Fushimi Inari","Learning to swing a katana with a Samurai master","Meditating with Zen monks at dawn","Attending a vibrant traditional matsuri festival"]}, "Bali": {"t":["hot","beach","nature","relax","budget"],"c":"#228B22","p":"bali indonesia rice terraces jungle sunset", "f":["Fine dining in a bamboo jungle restaurant","Eating spicy Nasi Goreng at a cheap local warung"], "d":["Cocktails at a luxurious cliffside beach club","Bintang beer while sitting on a beanbag on the sand"], "cu":["Taking a picture on the massive Bali Swing","Getting blessed in a holy water temple"], "e":["Hiking Mount Batur in the dark for sunrise","Surfing the world-class waves of Uluwatu","Scuba diving a WWII shipwreck in Tulamben","Getting a brutal but amazing 2-hour Balinese massage","White water rafting down the Ayung River","Riding a scooter through lush green rice terraces"]}, "Maldives": {"t":["hot","beach","relax","luxury","romance"],"c":"#00CED1","p":"maldives overwater bungalow crystal ocean", "f":["Dining in an all-glass underwater restaurant","Private beach BBQ cooked by a personal chef"], "d":["Champagne delivered to your pool via floating tray","Coconut cocktails on a deserted sandbank"], "cu":["Watching a movie at an outdoor jungle cinema","Night swim with glowing bioluminescent plankton"], "e":["Sleeping in a massive luxury overwater bungalow","Taking a private seaplane over the atolls","Scuba diving with massive, gentle Manta Rays","Deep sea fishing for Yellowfin Tuna","Submarine tour of the vibrant coral reefs","Couples spa day on a glass floor over the ocean"]}, "Phuket": {"t":["hot","beach","party","budget","adventure"],"c":"#FF8C00","p":"phuket thailand longtail boat limestone cliffs", "f":["Gourmet Thai fusion on a cliff edge","Eating insanely spicy Pad Thai from a street cart"], "d":["VIP table at an insane beach club","Drinking cheap buckets of liquor on Bangla Road"], "cu":["Getting a cheap, aggressive Thai foot massage","Shopping at the chaotic weekend night market"], "e":["Partying until dawn at the Full Moon Party","Bathing and feeding rescued elephants in a sanctuary","Taking a longtail boat to James Bond Island","Scuba diving with massive Whale Sharks","Watching a brutal live Muay Thai boxing match","Ziplining through the dense tropical jungle"]}, "Bangkok": {"t":["hot","city","party","foodie","culture"],"c":"#B22222","p":"bangkok thailand neon temples tuktuk", "f":["Michelin-star street food (Jay Fai's crab omelet)","Eating fried scorpions and crickets on Khao San Road"], "d":["Cocktails at the massive Sky Bar (from The Hangover)","Drinking cheap Chang beer on plastic stools"], "cu":["Taking a chaotic, terrifying Tuk-Tuk ride","Shopping from a boat at the Floating Market"], "e":["Exploring the stunning, solid gold Grand Palace","Partying with backpackers on Khao San Road","Cruising the Chao Phraya River on a luxury dinner ship","Attending the magical Yi Peng lantern festival","Getting a traditional Sak Yant bamboo tattoo","Exploring the creepy abandoned Sathorn Unique Tower"]}, "Singapore": {"t":["hot","city","luxury","foodie"],"c":"#8B008B","p":"singapore marina bay sands supertrees night", "f":["
 
-# ---------------------------------------------------------
-# 4. STATE MANAGEMENT & ENGINE LOGIC
-# ---------------------------------------------------------
-if 'stage' not in st.session_state:
-    st.session_state.stage = 'welcome'
-    st.session_state.q_index = 0
-    st.session_state.user_profile = {tag: 0 for tag in ["hot", "cold", "mild", "beach", "city", "nature", "mountains", "adventure", "relax", "luxury", "budget", "foodie", "culture", "party"]}
-    st.session_state.available_dests = list(destinations.keys())
-    st.session_state.chosen_dest = None
-    st.session_state.activities = []
-    st.session_state.activity_round = 0
-    st.session_state.current_activity_pool = []
+300 Chili Crab dinner at a luxury seafood house","latex
+3 Michelin-star Hainanese Chicken Rice at a hawker centre"], "d":["The original Singapore Sling at the Raffles Hotel","Craft cocktails in a hidden speakeasy"], "cu":["Walking through the glowing Supertree Grove","Exploring the indoor waterfall at the Jewel airport"], "e":["Swimming in the Marina Bay Sands infinity pool on the 57th floor","Taking a night safari to see nocturnal predators","Shopping in insanely massive luxury mega-malls","Riding the Singapore Flyer observation wheel","Bungee jumping on Sentosa Island","Watching the Formula 1 Night Race"]}, "Seoul": {"t":["mild","city","foodie","culture","party"],"c":"#4B0082","p":"seoul south korea neon palace night", "f":["Premium Hanwoo beef Korean BBQ","Eating live wriggling octopus at Noryangjin Fish Market"], "d":["High-end Soju tasting","Drinking Makgeolli (rice wine) in a street tent (Pojangmacha)"], "cu":["Wearing a traditional Hanbok to get into palaces for free","Trying 10-step Korean skincare routines"], "e":["Getting scrubbed raw at a traditional bathhouse (Jjimjilbang)","Singing K-Pop Karaoke in a private Noraebang","Visiting the heavily armed DMZ border with North Korea","Clubbing until 7 AM in Gangnam","Hiking Bukhansan Mountain right outside the city","Eating weird street food in Myeongdong"]}, "Taipei": {"t":["hot","city","foodie","culture"],"c":"#D2691E","p":"taipei taiwan night market 101 tower", "f":["Soup dumplings (Xiao Long Bao) at the original Din Tai Fung","Stinky Tofu at a chaotic night market"], "d":["High mountain Oolong tea ceremony","Drinking absurdly sugary Boba Bubble Tea"], "cu":["Releasing a glowing paper lantern in Shifen","Riding the Maokong glass-bottom gondola"], "e":["Taking the ultra-fast elevator up Taipei 101","Soaking in the Beitou thermal hot springs","Hiking Elephant Mountain for the perfect city view","Exploring the stunning Taroko Gorge marble canyons","Eating literally everything at Shilin Night Market","Scooter road trip along the dramatic east coast"]}, "Hanoi": {"t":["hot","city","culture","foodie","budget"],"c":"#556B2F","p":"hanoi vietnam busy streets pho motorbikes", "f":["Gourmet French-Vietnamese fusion","Eating 
 
-def set_stage(new_stage):
-    st.session_state.stage = new_stage
+1 Pho sitting on a tiny plastic stool on the street"],
+"d":["Egg coffee in a hidden, narrow cafe","Drinking Bia Hoi (fresh beer) for 20 cents a glass"],
+"cu":["Dodging thousands of motorbikes to cross the street","Watching a traditional Water Puppet show"],
+"e":["Taking a luxury overnight junk boat cruise in Ha Long Bay","Trekking the terraced rice fields of Sapa","Crawling through the Cu Chi tunnels (history)","Taking a sleeper train down the coast","Eating Banh Mi from a street cart","Exploring the massive, ancient cave of Son Doong"]},
+"Mumbai": {"t":["hot","city","culture","foodie"],"c":"#FF8C00","p":"mumbai india gateway chaotic colorful",
+"f":["Luxury dining at the Taj Mahal Palace hotel","Eating spicy Vada Pav from a bustling street stall"],
+"d":["High tea in a colonial-era luxury hotel","Drinking sweet, spiced Masala Chai in a clay cup"],
+"cu":["Watching the sunset at Marine Drive (Queen's Necklace)","Shopping for vibrant silks in the markets"],
+"e":["Taking a chaotic, crowded local train ride","Touring the massive Dharavi slum with a local guide","Visiting the ancient Elephanta Caves by boat","Attending a colorful, loud Bollywood movie premiere","Celebrating the wild, color-throwing Holi festival","Exploring the historic Gateway of India"]},
+"Jaipur": {"t":["hot","city","culture","romance"],"c":"#FF4500","p":"jaipur india pink city palaces desert",
+"f":["Royal Rajasthani Thali in a converted palace","Eating ultra-spicy Laal Maas curry"],
+"d":["Cocktails on a palace rooftop","Drinking fresh Lassi from a clay pot"],
+"cu":["Exploring the insanely intricate Hawa Mahal (Palace of Winds)","Getting a traditional Henna tattoo"],
+"e":["Taking a hot air balloon over the desert forts","Riding a jeep up to the massive Amber Fort","Sleeping like royalty in an actual Maharaja's palace","Spotting wild Bengal Tigers in Ranthambore on safari","Shopping for precious gems and textiles","Watching a snake charmer in the street markets"]},
+"Sri Lanka": {"t":["hot","nature","beach","culture","budget"],"c":"#32CD32","p":"sri lanka tea plantation train jungle",
+"f":["Gourmet crab curry in Colombo","Eating Kottu Roti chopped loudly on a hot griddle"],
+"d":["Tasting world-class Ceylon tea on a plantation","Drinking Arrack (coconut liquor) on the beach"],
+"cu":["Riding the famous, stunning blue train to Ella","Watching stilt fishermen at sunset"],
+"e":["Going on a jeep safari to spot wild Leopards in Yala","Climbing the massive Sigiriya Lion Rock fortress","Surfing the warm waves of Arugam Bay","Bathing rescued elephants in the river","Whale watching for massive Blue Whales","Hiking to World's End in the misty Horton Plains"]},
+"Bhutan": {"t":["mild","mountains","culture","nature","luxury"],"c":"#8B4513","p":"bhutan tigers nest monastery himalayas",
+"f":["Luxury organic farm-to-table dining","Eating Ema Datshi (spicy chilies and cheese)"],
+"d":["Drinking traditional Butter Tea","Tasting local craft beer in a remote valley"],
+"cu":["Practicing archery, the national sport","Wearing traditional Gho and Kira outfits"],
+"e":["Hiking up a cliff to the spectacular Tiger's Nest Monastery","Attending a vibrant masked dance festival (Tshechu)","Trekking through untouched Himalayan wilderness","Whitewater rafting down glacial rivers","Meditating with monks in a remote Dzong (fortress)","Receiving a traditional hot stone bath"]},
+"Kathmandu": {"t":["mild","cold","mountains","adventure","culture"],"c":"#8B0000","p":"kathmandu nepal temples himalayas prayer flags",
+"f":["High-end dining in a restored Rana palace","Eating massive plates of Momo dumplings"],
+"d":["Drinking salty Yak Butter Tea","Tasting Tongba (hot millet beer) sucked through a bamboo straw"],
+"cu":["Spinning prayer wheels at Swayambhunath (Monkey Temple)","Shopping for yak wool blankets in Thamel"],
+"e":["Taking a terrifying helicopter tour to Mount Everest Base Camp","Bungee jumping 160m into a deep river gorge","Trekking the brutal Annapurna Circuit for 10 days","Paragliding over the serene Pokhara lake","Spotting rhinos on a jungle safari in Chitwan","Whitewater rafting down freezing Himalayan rivers"]},
+"Komodo Island": {"t":["hot","nature","adventure","beach"],"c":"#2F4F4F","p":"komodo island dragons pink beach jungle",
+"f":["Gourmet seafood on a luxury liveaboard boat","Eating grilled fish on a stick on the beach"],
+"d":["Cold Bintang beer after a long hike","Drinking fresh coconut water straight from the tree"],
+"cu":["Relaxing on a rare, beautiful Pink Sand Beach","Watching thousands of flying foxes erupt at sunset"],
+"e":["Trekking through the brush to find massive, deadly Komodo Dragons","Scuba diving with Manta Rays in strong currents","Sailing the Indonesian archipelago on a Phinisi boat","Hiking to the stunning viewpoint on Padar Island","Swimming in crystal clear turquoise bays","Spearfishing your own dinner"]},
+"Palawan": {"t":["hot","beach","nature","adventure","budget"],"c":"#00CED1","p":"palawan philippines limestone lagoons clear water",
+"f":["Fresh lobster cooked on a remote island","Eating Adobo and Lechon (roast pig)"],
+"d":["Rum cocktails out of a pineapple","Drinking Red Horse beer by a beach bonfire"],
+"cu":["Taking a tiny outrigger boat to a hidden lagoon","Finding a totally deserted white sand beach"],
+"e":["Paddling deep into the massive Underground River cave","Island hopping through the breathtaking Bacuit Archipelago","Scuba diving WWII Japanese shipwrecks in Coron","Ziplining between two islands over the ocean","Kayaking through secret emerald lagoons","Camping on a deserted island like Survivor"]},
+"Chiang Mai": {"t":["hot","mountains","culture","foodie","relax"],"c":"#2E8B57","p":"chiang mai thailand temples lanterns jungle",
+"f":["Luxury Khao Soi (curry noodle soup) tasting","Eating insanely spicy papaya salad at the night bazaar"],
+"d":["Artisanal coffee grown in the local mountains","Drinking Thai Iced Tea out of a plastic bag"],
+"cu":["Getting a blessed string tied by a monk","Releasing a glowing paper lantern into the night sky"],
+"e":["Bathing and feeding elephants at an ethical sanctuary","Taking an aggressive 5-day jungle survival trek","Attending an authentic Thai cooking masterclass","Getting a brutal traditional Thai massage","Ziplining through the jungle with 'Flight of the Gibbon'","Renting a scooter to drive the massive Mae Hong Son loop"]},
+"Osaka": {"t":["mild","city","foodie","culture","party"],"c":"#DC143C","p":"osaka japan neon dotonbori food",
+"f":["Eating premium Kobe beef cooked in front of you","Eating endless Takoyaki (octopus balls) on the street"],
+"d":["Craft Japanese gin tasting","Drinking Sake until dawn in a tiny Izakaya"],
+"cu":["Taking photos with the giant Glico running man sign","Feeding deer in nearby Nara"],
+"e":["Eating literally everything in the Dotonbori food district","Riding the rollercoasters at Universal Studios Japan","Exploring the massive, imposing Osaka Castle","Partying in the vibrant Amerikamura district","Attending a frantic, loud baseball game","Taking a day trip to explore the temples of Kyoto"]},
+"Hokkaido": {"t":["cold","mountains","adventure","nature","foodie"],"c":"#E0FFFF","p":"hokkaido japan snow skiing crab",
+"f":["Eating massive, expensive King Crab legs","Slurping hot Miso Ramen with a slab of butter in it"],
+"d":["Tasting Sapporo beer at the original brewery","Drinking hot sake in an outdoor snow bath"],
+"cu":["Watching the adorable snow monkeys bathe","Seeing the massive ice sculptures at the Snow Festival"],
+"e":["Skiing waist-deep, world-class powder snow in Niseko","Bathing in a natural hot spring (Onsen) while it snows","Snowmobiling across vast frozen plains","Icebreaker cruising on the Sea of Okhotsk","Hiking a smoking, active volcano in summer","Eating incredible fresh sea urchin at the morning market"]},
 
-def handle_answer(selected_option):
-    # Apply tags weights to user profile
-    weights = questions[st.session_state.q_index]["opts"][selected_option]
-    for tag, value in weights.items():
-        st.session_state.user_profile[tag] += value
-    
-    st.session_state.q_index += 1
-    
-    # Trigger Stick or Risk exactly at Question 10
-    if st.session_state.q_index == 10:
-        set_stage('stick_or_risk')
-    elif st.session_state.q_index >= len(questions):
-        calculate_final_match()
-        set_stage('final_match_reveal')
-
-def get_best_match():
-    best_score = -9999
-    best_dest = None
-    
-    # Shuffle available to prevent alphabetical bias on ties
-    random.shuffle(st.session_state.available_dests)
-    
-    for dest in st.session_state.available_dests:
-        tags = destinations[dest]["tags"]
-        score = sum([st.session_state.user_profile[t] for t in tags])
-        if score > best_score:
-            best_score = score
-            best_dest = dest
-            
-    return best_dest
-
-def stick_choice():
-    # User decided to stick with the halfway match
-    st.session_state.chosen_dest = get_best_match()
-    load_activities()
-    set_stage('activity_selection')
-
-def risk_choice():
-    # Throw away current best match and continue!
-    current_best = get_best_match()
-    st.session_state.available_dests.remove(current_best)
-    set_stage('questions')
-
-def calculate_final_match():
-    st.session_state.chosen_dest = get_best_match()
-    load_activities()
-
-def load_activities():
-    acts = destinations[st.session_state.chosen_dest]["acts"]
-    # Grab exactly 6 activities for 3 Tinder rounds
-    st.session_state.current_activity_pool = random.sample(acts, 6)
-
-def pick_activity(act):
-    st.session_state.activities.append(act)
-    st.session_state.activity_round += 1
-    if st.session_state.activity_round >= 3:
-        set_stage('final_itinerary')
-
-# ---------------------------------------------------------
-# 5. UI RENDERING
-# ---------------------------------------------------------
-
-if st.session_state.stage == 'welcome':
-    set_bg("#1E1E1E", "#00FF7F") # Dark with neon green
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("<div class='giant-emoji'>✈️🌍✨</div>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; font-size: 65px; font-weight: 900;'>The Ultimate Holiday Finder</h1>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style='background-color: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; margin: 20px auto; max-width: 800px;'>
-    <h3 style='margin-bottom: 20px;'>Here is how it works:</h3>
-    <p style='font-size: 22px;'>1. You will answer <b>20 psychological travel questions</b>.</p>
-    <p style='font-size: 22px;'>2. Our engine will filter through <b>50 global destinations</b> to find your exact match.</p>
-    <p style='font-size: 22px;'>3. Halfway through, you will get a <b>Stick or Risk</b> offer.</p>
-    <p style='font-size: 22px;'>4. Finally, you will swipe to pick your perfect activities!</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.button("LET'S GO! 🚀", on_click=set_stage, args=('questions',))
-    st.balloons()
-
-elif st.session_state.stage == 'questions':
-    set_bg("#2C3E50", "#FFFFFF") # Deep slate blue
-    q_data = questions[st.session_state.q_index]
-    
-    st.markdown(f"<h1 style='font-size: 45px; text-align: center;'>{q_data['q']}</h1>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Render radio button options
-    options = list(q_data["opts"].keys())
-    choice = st.radio("👇 Click your vibe:", options, index=0)
-    
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.button("LOCK IT IN! 🔒➡️", on_click=handle_answer, args=(choice,))
-    
-    st.progress(st.session_state.q_index / 20)
-
-elif st.session_state.stage == 'stick_or_risk':
-    # Question 10 Pause
-    best_dest = get_best_match()
-    dest_data = destinations[best_dest]
-    set_bg(dest_data["color"], "#FFFFFF")
-    
-    st.markdown("<h1 style='text-align: center; font-size: 70px;'>🚨 HALFWAY POINT! 🚨</h1>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([1, 1.2])
-    with col1:
-        safe_image(dest_data["prompt"])
-    
-    with col2:
-        st.markdown(f"<h2 style='font-size: 45px;'>Right now, you are matching perfectly with: <br><u style='font-size: 60px;'>{best_dest}</u></h2>", unsafe_allow_html=True)
-        st.markdown(f"<p style='font-size: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;'>Imagine: {random.choice(dest_data['acts'])}</p>", unsafe_allow_html=True)
-        
-        st.markdown("<h3 style='margin-top: 30px;'>Do you want to STICK with this holiday, or RISK it for something else?</h3>", unsafe_allow_html=True)
-        st.markdown("<p><i>(Warning: If you RISK, this destination goes in the bin forever!)</i></p>", unsafe_allow_html=True)
-        
-        sub1, sub2 = st.columns(2)
-        with sub1:
-            st.button("😍 STICK! TAKE ME HERE!", on_click=stick_choice)
-        with sub2:
-            st.button("🎲 RISK! KEEP ASKING!", on_click=risk_choice)
-
-elif st.session_state.stage == 'final_match_reveal':
-    # Exciting Reveal screen
-    best_dest = st.session_state.chosen_dest
-    dest_data = destinations[best_dest]
-    set_bg(dest_data["color"], "#FFFFFF")
-    
-    # Conditional animations
-    if "cold" in dest_data["tags"]:
-        st.snow()
-    else:
-        st.balloons()
-        
-    st.markdown("<h1 style='text-align: center; font-size: 80px; text-transform: uppercase;'>🎉 WE'VE FOUND YOU A MATCH! 🎉</h1>", unsafe_allow_html=True)
-    
-    safe_image(dest_data["prompt"])
-    
-    st.markdown(f"<h1 style='text-align: center; font-size: 100px; font-weight: 900;'>{best_dest}!</h1>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.button("PICK MY ACTIVITIES! ➡️", on_click=set_stage, args=('activity_selection',))
-
-elif st.session_state.stage == 'activity_selection':
-    best_dest = st.session_state.chosen_dest
-    dest_data = destinations[best_dest]
-    set_bg(dest_data["color"], "#FFFFFF")
-    
-    rnd = st.session_state.activity_round
-    act1 = st.session_state.current_activity_pool[rnd * 2]
-    act2 = st.session_state.current_activity_pool[(rnd * 2) + 1]
-    
-    st.markdown(f"<h1 style='text-align: center; font-size: 50px;'>Build your {best_dest} Itinerary! 📅</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>Tinder Rules: You can only KEEP ONE of these activities. The other is thrown in the trash.</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h4 style='text-align: center;'>Round {rnd + 1} of 3</h4><br>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown(f"<div style='background-color: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; height: 200px; display: flex; align-items: center; justify-content: center;'><h2 style='text-align: center;'>{act1}</h2></div><br>", unsafe_allow_html=True)
-        st.button("✅ KEEP THIS ONE", key=f"btn1_{rnd}", on_click=pick_activity, args=(act1,))
-        
-    with col2:
-        st.markdown(f"<div style='background-color: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; height: 200px; display: flex; align-items: center; justify-content: center;'><h2 style='text-align: center;'>{act2}</h2></div><br>", unsafe_allow_html=True)
-        st.button("✅ NO, KEEP THIS ONE", key=f"btn2_{rnd}", on_click=pick_activity, args=(act2,))
-
-elif st.session_state.stage == 'final_itinerary':
-    best_dest = st.session_state.chosen_dest
-    dest_data = destinations[best_dest]
-    set_bg(dest_data["color"], "#FFFFFF")
-    
-    if "cold" in dest_data["tags"]:
-        st.snow()
-    else:
-        st.balloons()
-    
-    st.markdown("<h1 style='text-align: center; font-size: 70px; font-weight: 900;'>🎊 PACK YOUR BAGS! 🎊</h1>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([1, 1.5])
-    
-    with col1:
-        safe_image(dest_data["prompt"])
-    
-    with col2:
-        st.markdown(f"<h2 style='font-size: 60px; text-decoration: underline;'>📍 {best_dest}</h2>", unsafe_allow_html=True)
-        st.markdown("<h3>Your Hand-Picked Ultimate Itinerary:</h3>", unsafe_allow_html=True)
-        
-        for act in st.session_state.activities:
-            st.markdown(f"<div style='background-color: rgba(255,255,255,0.25); padding: 20px; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);'><h3 style='margin:0;'>🌟 {act}</h3></div>", unsafe_allow_html=True)
-            
-    st.markdown("<br><hr><br>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    <style>
-    .twist-btn > button {
-        background-color: #FF0000 !important; color: white !important; border: none !important; animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1.0); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-        70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(255, 0, 0, 0); }
-        100% { transform: scale(1.0); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    col_x, col_y, col_z = st.columns([1, 2, 1])
-    with col_y:
-        st.markdown("<div class='twist-btn'>", unsafe_allow_html=True)
-        st.button("CLICK FOR ONE MORE SURPRISE... 👀", on_click=set_stage, args=('twist',))
-        st.markdown("</div>", unsafe_allow_html=True)
-
-elif st.session_state.stage == 'twist':
-    set_bg("#000000", "#FFFFFF")
-    
-    st.markdown("<div class='beating-heart'>❤️</div>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; font-size: 80px;'>Do you love Damien?</h1>", unsafe_allow_html=True)
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns([1, 2, 2, 1])
-    with col2:
-        st.button("YES", on_click=lambda: setattr(st.session_state, 'twist_ans', 'yes') or set_stage('twist_result'))
-    with col3:
-        st.button("NO", on_click=lambda: setattr(st.session_state, 'twist_ans', 'no') or set_stage('twist_result'))
-
-elif st.session_state.stage == 'twist_result':
-    set_bg("#000000", "#FFFFFF")
-    st.markdown("<div class='giant-emoji' style='margin-top: 50px;'>❤️</div>", unsafe_allow_html=True)
-    
-    if st.session_state.twist_ans == "yes":
-        st.markdown("<h1 style='text-align: center; font-size: 80px; color: #FF1493 !important;'>I love you too Katie bear 🐻</h1>", unsafe_allow_html=True)
-        st.balloons()
-    else:
-        st.markdown("<h1 style='text-align: center; font-size: 80px; color: #FF1493 !important;'>I love you too Katie bear 🐻</h1>", unsafe_allow_html=True)
-        st.markdown("<h2 style='text-align: center; font-size: 50px; color: #FFFFFF !important;'>...but enjoy your holiday on your own 😜</h2>", unsafe_allow_html=True)
+# AMERICAS (North, Central, South, Caribbean)
+"New York City": {"t":["mild","cold","city","foodie","luxury","culture"],"c":"#4682B4","p":"new york city times square skyline yellow cab",
+"f":[" 2 slice of NY pizza"],
+"d":["Martinis in a high-end hidden speakeasy","Drinking cheap beers at a gritty dive bar"],
+"cu":["Ice skating in Central Park","Walking the High Line elevated park"],
+"e":["Taking a helicopter doors-off tour over Manhattan","Watching a smash-hit Broadway musical from VIP seats","Attending a crazy underground warehouse party in Brooklyn","Shopping spree on 5th Avenue","Eating massive pastrami sandwiches at Katz's Deli","Watching the ball drop in Times Square on New Year's"]},
+"San Francisco": {"t":["mild","city","foodie","culture","adventure"],"c":"#1E90FF","p":"san francisco golden gate bridge cable car",
+"f":["10-course Michelin star tasting menu in Soma","Eating Clam Chowder out of a massive sourdough bowl"],
+"d":["Wine tasting trip to Napa Valley via private limo","Drinking Irish Coffees at the Buena Vista"],
+"cu":["Hanging off the side of a moving Cable Car","Having a picnic at the Painted Ladies"],
+"e":["Taking a terrifying midnight Alcatraz ghost tour","Biking across the Golden Gate Bridge","Skydiving directly over the Bay","Hiking among massive Redwoods in Muir Woods","Eating giant burritos in the Mission District","Sailing a catamaran under the Golden Gate Bridge"]},
+"Las Vegas": {"t":["hot","city","party","luxury"],"c":"#800080","p":"las vegas neon casinos strip night",
+"f":["Eating at Gordon Ramsay's Hell's Kitchen","Eating at a massive, endless 24-hour casino buffet"],
+"d":["Bottle service at a mega-club like Omnia","Drinking massive frozen margaritas out of a plastic yard glass"],
+"cu":["Watching the Bellagio Fountains dance","Riding the gondolas inside the Venetian"],
+"e":["Gambling high stakes in a VIP casino room","Taking a helicopter tour into the Grand Canyon","Watching a mind-bending Cirque du Soleil show","Driving supercars on a professional racetrack","Partying at a massive daytime pool club","Getting married by an Elvis impersonator"]},
+"Miami": {"t":["hot","beach","party","luxury"],"c":"#FF1493","p":"miami south beach neon palm trees ocean",
+"f":["Luxury stone crab dining at Joe's","Eating authentic Cuban sandwiches in Little Havana"],
+"d":["Champagne on a mega-yacht","Drinking mojitos at a salsa club"],
+"cu":["Rollerblading down Ocean Drive in neon gear","Looking at street art in Wynwood Walls"],
+"e":["Partying until 6 AM at a massive club like E11EVEN","Riding an airboat through the Everglades looking for alligators","Chartering a private yacht to the Bahamas","Driving a neon Lamborghini down South Beach","Deep sea fishing for Marlin","Attending an exclusive Art Basel party"]},
+"Hawaii (Maui)": {"t":["hot","beach","adventure","nature","relax"],"c":"#FF4500","p":"maui hawaii tropical sunset surfing volcano",
+"f":["High-end Pacific Rim cuisine with ocean views","Eating massive plates of garlic shrimp from a food truck"],
+"d":["Drinking Mai Tais at a traditional Luau","Sipping fresh coconut water on the beach"],
+"cu":["Getting a traditional flower lei greeting","Watching sea turtles bask on the sand"],
+"e":["Taking a doors-off helicopter tour over Jurassic waterfalls","Driving the terrifying, winding Road to Hana","Surfing massive waves (or taking a lesson)","Hiking the Haleakalā volcano crater for sunrise","Scuba diving in the Molokini Crater","Attending an authentic fire-dancing Luau"]},
+"Yellowstone": {"t":["cold","mild","nature","adventure","mountains"],"c":"#A0522D","p":"yellowstone geyser bison rugged nature",
+"f":["Gourmet game meat (elk/bison) at a luxury lodge","Eating campfire chili out of a tin can"],
+"d":["Craft beer tasting in a cowboy saloon","Drinking cowboy coffee boiled over a fire"],
+"cu":["Watching Old Faithful erupt on schedule","Spotting adorable bear cubs through binoculars"],
+"e":["Snowmobiling through the park in dead of winter","Spotting packs of wild wolves in the Lamar Valley","Hiking around the neon-colored Grand Prismatic Spring","Camping deep in grizzly bear country","Fly fishing in freezing, crystal-clear rivers","Whitewater rafting down the Snake River"]},
+"Banff (Canada)": {"t":["cold","mountains","nature","adventure"],"c":"#2F4F4F","p":"banff canada lake louise mountains snow",
+"f":["Fine dining at the Fairmont Chateau Lake Louise","Eating massive plates of Canadian Poutine (fries, curds, gravy)"],
+"d":["Drinking ice wine from the local vineyards","Sipping hot chocolate while ice skating"],
+"cu":["Canoeing in the impossibly turquoise Lake Louise","Soaking in the Banff Upper Hot Springs"],
+"e":["Helicopter tour over the massive Canadian Rockies","Hiking to the spectacular Plain of Six Glaciers","Skiing world-class powder at Sunshine Village","Ice climbing up a frozen waterfall in Johnston Canyon","Spotting massive wild Grizzly Bears","Taking the steep gondola up Sulphur Mountain"]},
+"Mexico City": {"t":["mild","city","foodie","culture","party"],"c":"#B22222","p":"mexico city zocalo vibrant culture architecture",
+"f":["Dining at Pujol (top 10 restaurant in the world)","Eating endless $`1 Al Pastor street tacos"],
+"d":["High-end Mezcal tasting in a slick speakeasy","Drinking Micheladas in a loud, crowded Cantina"],
+"cu":["Riding colorful trajineras (boats) in Xochimilco","Browsing art in the Frida Kahlo Museum"],
+"e":["Climbing the massive ancient Pyramids of the Sun and Moon","Watching a wild, high-flying Lucha Libre wrestling match","Partying until dawn in the trendy Roma Norte district","Taking a hot air balloon over the Teotihuacan ruins","Eating exotic insects like chapulines (grasshoppers)","Exploring the massive Chapultepec Castle"]},
+"Tulum": {"t":["hot","beach","party","culture","relax"],"c":"#20B2AA","p":"tulum mexico beach cenote ancient ruins jungle",
+"f":["Gourmet Maya-fusion dining in the jungle","Eating fresh fish tacos barefoot on the beach"],
+"d":["Drinking Mezcal cocktails at a boho-chic beach club","Drinking cheap tequila shots in town"],
+"cu":["Doing yoga on the beach at sunrise","Renting a bicycle to ride down the beach road"],
+"e":["Swimming in stunning underground crystal Cenotes","Partying at a massive jungle techno rave","Exploring the ancient Mayan ruins on the cliff edge","Scuba diving in the dark, underwater cave systems","Swimming with giant sea turtles in Akumal","Kitesurfing on the breezy Caribbean ocean"]},
+"Costa Rica": {"t":["hot","nature","adventure","relax","beach"],"c":"#006400","p":"costa rica jungle waterfall sloth volcano",
+"f":["Gourmet dining at a luxury eco-resort","Eating hearty Gallo Pinto (rice and beans) for breakfast"],
+"d":["Drinking Imperial beer on a surfboard","Tasting fresh Costa Rican coffee right on the plantation"],
+"cu":["Cuddling rescued sloths at an animal sanctuary","Relaxing in a hammock listening to howler monkeys"],
+"e":["Superman Ziplining 1000ft above the jungle canopy","Soaking in natural volcanic hot springs near Arenal","Surfing world-class waves in Tamarindo","Night hiking to spot deadly snakes and glowing frogs","Whitewater rafting through Class 4 jungle rapids","Rappelling down a massive roaring waterfall"]},
+"Havana": {"t":["hot","city","culture","party"],"c":"#C71585","p":"havana cuba vintage cars colorful streets cigars",
+"f":["Eating lobster at a fancy paladar (private restaurant)","Eating Ropa Vieja (shredded beef) with black beans"],
+"d":["Drinking Daiquiris at Hemingway's favorite bar, El Floridita","Drinking cheap rum out of a coconut"],
+"cu":["Rolling an authentic Cuban Cigar","Walking the Malecon seawall at sunset"],
+"e":["Riding in a bright pink 1950s vintage convertible","Dancing Salsa in the streets with locals","Exploring the crumbling, colorful architecture of Old Havana","Attending the extravagant Tropicana Cabaret show","Taking a day trip to the stunning Viñales tobacco valley","Scuba diving the untouched coral reefs of the Bay of Pigs"]},
+"Rio de Janeiro": {"t":["hot","beach","party","culture","city"],"c":"#32CD32","p":"rio de janeiro christ the redeemer copacabana sunset",
+"f":["Endless premium meats at a luxury Churrascaria","Eating Pão de Queijo (cheese bread) on the street"],
+"d":["Drinking Caipirinhas on Copacabana beach","Drinking cold chopp (draft beer) in a lively boteco"],
+"cu":["Taking the cable car up Sugarloaf Mountain","Buying a tiny bikini/sunga and playing footvolley"],
+"e":["Taking a helicopter around the massive Christ the Redeemer statue","Dancing Samba until dawn at the massive Carnival parade","Hang gliding off a mountain and landing on the beach","Exploring the vibrant, chaotic Favela communities","Hiking through the Tijuca urban rainforest","Attending a massive, deafening soccer game at Maracanã Stadium"]},
+"Patagonia (Argentina/Chile)": {"t":["cold","mountains","nature","adventure"],"c":"#4682B4","p":"patagonia glaciers mountains rugged ice",
+"f":["Gourmet Patagonian lamb cooked over an open fire","Eating empanadas after a freezing hike"],
+"d":["Drinking high-end Malbec wine from Mendoza","Drinking bitter Mate tea through a metal straw with Gauchos"],
+"cu":["Spotting adorable penguins on the coast","Petting wild guanacos (llamas)"],
+"e":["Trekking across the massive, cracking Perito Moreno Glacier","Hiking the brutal base of Mount
