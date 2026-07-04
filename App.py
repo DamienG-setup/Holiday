@@ -2,6 +2,7 @@ import streamlit as st
 import random
 import urllib.parse
 from collections import Counter
+import math
 
 st.set_page_config(page_title="The Perfect Holiday Finder ✈️", page_icon="🌍", layout="wide")
 
@@ -30,11 +31,9 @@ def set_bg(color, text_color):
 def safe_image(prompt, seed=None):
     if seed is None:
         seed = sum(ord(c) for c in prompt) % 10000
-    # Strip special characters to prevent broken image links
     clean_prompt = "".join(c for c in prompt if c.isalnum() or c == " ")
     encoded = urllib.parse.quote(clean_prompt)
     url = f"https://image.pollinations.ai/prompt/{encoded}?width=1200&height=700&nologo=true&seed={seed}"
-    # Added onerror to hide image if the API fails, preventing ugly broken icons
     html = f'<img src="{url}" onerror="this.style.display=\'none\'" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
     st.markdown(html, unsafe_allow_html=True)
 
@@ -144,7 +143,7 @@ raw_dests = [
     "Milford Sound (New Zealand)|cold,nature,mountains,adventure,relax|#2F4F4F|milford sound new zealand fjords waterfalls|Gourmet lunch on a luxury nature cruise|Eat a classic Kiwi meat pie on the bus ride in|Drink hot tea while getting sprayed by a waterfall|Drink Speights beer in a cozy pub|Spot playful Kea alpine parrots|See wild dolphins swimming alongside your boat|Cruise through the majestic towering fjords and waterfalls|Take a scenic flight over the dramatic Southern Alps|Kayak silently through the massive fjords|Hike the multi-day world-famous Milford Track|Scuba dive in the dark deep fjord waters to see black coral|Explore the glowworm caves in nearby Te Anau",
     "Bora Bora (French Polynesia)|hot,beach,relax,luxury,romance|#00BFFF|bora bora tropical island luxury overwater bungalow|Private dinner served on the beach surrounded by tiki torches|Eat Tahitian Poisson Cru raw fish in coconut milk|Drink cocktails out of a freshly cut coconut|Drink Hinano Tahiti beer on a boat|Get a traditional Polynesian flower crown|Have breakfast delivered to your bungalow by canoe|Sleep in a massive overwater bungalow|Swim with friendly reef sharks and stingrays|Take a helicopter ride around Mount Otemanu|Jet ski across the impossibly blue lagoon|Attend an intense Polynesian fire dancing show|Scuba dive outside the reef for lemon sharks",
     "Sydney (Australia)|mild,hot,city,beach,party|#1E90FF|sydney opera house harbour bridge ocean|Fine dining inside the Sydney Opera House sails|Eat a classic Aussie meat pie with ketchup|Cocktails at a rooftop bar overlooking the Harbour|Drink pints of Victoria Bitter at a local pub|Pet Kangaroos and Koalas at the zoo|Take the scenic ferry to Manly Beach|Climb the massive arch of the Sydney Harbour Bridge|Surf the famous waves at Bondi Beach|Sail a yacht around the spectacular Sydney Harbour|Take a seaplane to a luxury waterside restaurant|Party at the massive Mardi Gras festival|Scuba dive with Grey Nurse Sharks in Manly",
-    "Melbourne (Australia)|mild,city,culture,foodie|#4682B4|melbourne city street art coffee|10-course tasting menu at Attica|Eat incredible Asian-fusion in Chinatown|Drink world-class flat white coffee in a hidden laneway|Drink craft beer in a trendy rooftop bar|Wander the vibrant graffiti-filled Hosier Lane|Watch the little penguins parade at Phillip Island|Drive the spectacular Great Ocean Road to the 12 Apostles|Attend a massive deafening AFL footy match|Explore the hidden underground speakeasies|Take a hot air balloon over the Yarra Valley vineyards|Go surfing at Bells Beach|Hike the rugged Grampians National National Park",
+    "Melbourne (Australia)|mild,city,culture,foodie|#4682B4|melbourne city street art coffee|10-course tasting menu at Attica|Eat incredible Asian-fusion in Chinatown|Drink world-class flat white coffee in a hidden laneway|Drink craft beer in a trendy rooftop bar|Wander the vibrant graffiti-filled Hosier Lane|Watch the little penguins parade at Phillip Island|Drive the spectacular Great Ocean Road to the 12 Apostles|Attend a massive deafening AFL footy match|Explore the hidden underground speakeasies|Take a hot air balloon over the Yarra Valley vineyards|Go surfing at Bells Beach|Hike the rugged Grampians National Park",
     "Fiji|hot,beach,nature,adventure,culture|#3CB371|fiji tropical jungle beach beautiful ocean|Eat Lovo meat and veggies cooked in an earth oven|Eat Kokoda Fijian ceviche|Attend a traditional Kava drinking ceremony|Drink Fiji Bitter beer on the beach|Take a mud bath in the Sabeto Hot Springs|Listen to the locals sing traditional farewell songs|Scuba dive the colorful Great Astrolabe Reef|Whitewater raft the spectacular Upper Navua River|Zipline through the dense jungle canopy|Take a seaplane to the remote Yasawa Islands|Surf the massive world-class Cloudbreak wave|Island hop on a luxury catamaran",
     "Samoa|hot,beach,adventure,culture|#3CB371|samoa tropical ocean trench|Eat a massive traditional Umu feast|Eat crispy Taro root chips|Drink Vailima beer|Drink Kava with the village chief|Swim in the spectacular To Sua Ocean Trench|Watch the massive Alofaaga blowholes erupt|Surf the uncrowded pristine reef breaks|Jungle trek to hidden massive waterfalls|Watch a terrifying traditional Fire Knife dance|Scuba dive the untouched coral reefs|Stay in a traditional open-air Fale on the beach|Slide down the natural sliding rocks",
     "Rotorua (New Zealand)|mild,nature,adventure,culture|#8B4513|rotorua new zealand geysers mud pools maori|Eat traditional Maori Hangi cooked underground|Eat a classic Kiwi pavlova|Drink local craft beer|Drink Sauvignon Blanc from Marlborough|Watch the massive Pohutu Geyser erupt|Soak in the colorful geothermal mud pools|Zipline through the massive ancient Redwood forest|Whitewater raft down the highest commercially rafted waterfall|Roll down a hill inside a giant inflatable Zorb ball|Learn the fierce Haka dance at a Maori village|Mountain bike the world-class Whakarewarewa trails|Luge down the mountain track at high speeds"
@@ -176,7 +175,6 @@ animal_map = {
     "Luang Prabang (Laos)": ["Asian Elephants", "Sun Bears"],
     "Jaipur (India)": ["Bengal Tigers", "Rhesus Macaques", "Indian Elephants"],
     "Maldives": ["Manta Rays", "Whale Sharks", "Sea Turtles", "Dolphins"],
-
     "New York City (USA)": ["Central Park Squirrels", "Peregrine Falcons"],
     "Los Angeles (USA)": ["Mountain Lions", "Sea Lions", "Dolphins"],
     "San Francisco (USA)": ["Sea Lions", "Harbor Seals", "Pelicans"],
@@ -203,7 +201,6 @@ animal_map = {
     "Cartagena (Colombia)": ["Sloths", "Iguanas", "Pelicans"],
     "Medellin (Colombia)": ["Toucans", "Monkeys", "Parrots"],
     "Buenos Aires (Argentina)": ["Capybaras (nearby)", "Stray Cats", "Monk Parakeets"],
-
     "Rome (Italy)": ["Colosseum Cats", "Wild Boars (outskirts)"],
     "Amalfi Coast (Italy)": ["Dolphins", "Peregrine Falcons"],
     "Venice (Italy)": ["Lagoon Seagulls", "Egrets"],
@@ -227,7 +224,6 @@ animal_map = {
     "Budapest (Hungary)": ["Red Squirrels", "Saker Falcons"],
     "Copenhagen (Denmark)": ["Mute Swans", "Harbor Seals"],
     "Lapland (Finland)": ["Reindeer", "Siberian Huskies", "Brown Bears", "Wolverines"],
-
     "Chefchaouen (Morocco)": ["Street Cats", "Macaques (nearby)"],
     "Cape Town (South Africa)": ["African Penguins", "Great White Sharks", "Baboons", "Ostriches"],
     "Kruger National Park (South Africa)": ["Lions", "Leopards", "Elephants", "Rhinos", "Buffalo"],
@@ -244,7 +240,6 @@ animal_map = {
     "Mauritius": ["Giant Tortoises", "Pink Pigeons", "Macaques"],
     "Seychelles": ["Aldabra Giant Tortoises", "Fruit Bats", "Sea Turtles", "Whale Sharks"],
     "Madagascar": ["Ring-tailed Lemurs", "Chameleons", "Aye-Ayes", "Fossa"],
-
     "Great Barrier Reef (Australia)": ["Clownfish", "Green Sea Turtles", "Manta Rays", "Reef Sharks"],
     "Australian Outback (Uluru)": ["Red Kangaroos", "Emus", "Thorny Devils", "Dingoes"],
     "Queenstown (New Zealand)": ["Kea Parrots", "Sheep", "Brown Trout"],
@@ -266,7 +261,6 @@ for row in raw_dests:
         "e": [parts[10], parts[11], parts[12], parts[13], parts[14], parts[15]]
     }
 
-# UPDATED STATIC QUESTIONS - Now with 5 balanced answers each
 static_qs = [
     {"q": "First things first. What is your absolute ideal climate? ☀️❄️", "opts": {
         "Roasting hot. Bake me like a potato.": {"tags": ["hot"], "cheeky": "Factor 50 sunscreen required. We are chasing the sun."},
@@ -308,12 +302,12 @@ raw_qs = [
     "What’s your preferred method of escaping a bad date?|'I need to go to the bathroom' climbs out window|adventure,party,nature|The classic Houdini exit.|Faking an emergency phone call|city,mild,culture|Smooth, if a bit cliché.|Just telling them 'No vibes' and leaving|hot,budget,mountains|Brutal honesty. Respect.|Having my butler fake a ransom note|luxury,romance,relax|Expensive, but effective.|I don't escape, I just make it worse on purpose|foodie,beach,cold|You woke up and chose violence.",
     "You find a time machine. First stop?|Dinosaurs. I want to ride a T-Rex.|nature,adventure,hot|You will absolutely be eaten.|The roaring 1920s for a wild party|party,city,luxury|Gatsby vibes. Don't drink the bathtub gin.|To last Tuesday so I can eat that one pizza again|foodie,relax,budget|Priorities. I respect it.|Ancient Rome to watch the gladiators|culture,mild,mountains|Blood, sand, and sandals.|The future, to see what robots look like|cold,beach,romance|Shiny and chrome.",
     "Your aesthetic as a teenager?|Too much eyeliner and emotional rock music|city,party,cold|It wasn't a phase, mom!|Neon everything. I glowed in the dark.|hot,beach,adventure|A walking highlighter.|Preppy, clean, and terrifyingly organized|luxury,mild,culture|Future CEO energy.|I just wore whatever was on the floor|budget,nature,relax|Resourceful and lazy.|Camo print. I was preparing for war.|mountains,nature,foodie|Ready for the apocalypse.",
-    "What is your signature cocktail ingredient?|Something that's currently on fire|party,adventure,hot|Eyebrows are overrated anyway.|Gold leaf flakes|luxury,city,romance|Tastes like nothing, costs $`50.|Just give me a beer in a can|budget,beach,nature|Keep it simple, keep it cheap.|Whatever the bartender is experimenting with|culture,foodie,mild|A true connoisseur of chaos.|Ice. Lots of ice.|cold,mountains,relax|Brain freeze incoming.",
+    "What is your signature cocktail ingredient?|Something that's currently on fire|party,adventure,hot|Eyebrows are overrated anyway.|Gold leaf flakes|luxury,city,romance|Tastes like nothing, costs $50.|Just give me a beer in a can|budget,beach,nature|Keep it simple, keep it cheap.|Whatever the bartender is experimenting with|culture,foodie,mild|A true connoisseur of chaos.|Ice. Lots of ice.|cold,mountains,relax|Brain freeze incoming.",
     "What do you do when the WiFi goes down?|Panic. Cry. Refresh. Repeat.|city,luxury,party|The withdrawal symptoms are kicking in.|Read a physical book like a 19th-century peasant|culture,mild,romance|Ah, the smell of old paper.|Go outside and touch grass|nature,mountains,adventure|Nature? What are the graphics like?|Take a very long nap|relax,beach,cold|Rebooting your own system.|Cook an elaborate 5-course meal|foodie,hot,budget|Chopping onions to hide the tears.",
     "What is your role in a heist movie?|The mastermind in the tailored suit|luxury,city,culture|Looking sharp while stealing art.|The chaotic explosives expert|adventure,party,hot|Boom goes the dynamite!|The getaway driver eating a sandwich|foodie,budget,beach|Snacks are essential for crime.|The acrobat dodging lasers|mountains,nature,mild|Flexible and stressed.|The decoy who just causes a massive distraction|romance,relax,cold|A drama queen, but useful.",
     "Ideal sandwich architecture?|Meat, cheese, bread. No nonsense.|mountains,budget,cold|A structural purist.|14 different ingredients that require a jaw dislocation|foodie,adventure,party|A delicious mess.|Avocado, sprouts, and artisanal sourdough|culture,mild,city|Very trendy. Very expensive.|Just a hot dog. (Yes, it's a sandwich)|beach,hot,nature|Controversial, but I'll allow it.|Truffle mayo and gold leaf on brioche|luxury,romance,relax|Bougie bread.",
     "How do you pack a suitcase?|Throw everything in 10 minutes before the flight|adventure,party,hot|Living on the absolute edge.|Vacuum-sealed, color-coordinated bags|city,culture,luxury|You scare me, but I'm impressed.|I only bring a toothbrush and buy clothes there|budget,beach,nature|Minimalist nomad.|I pack 14 outfits for a 3-day trip|romance,relax,mild|You never know if there will be a gala!|I force someone else to pack it for me|cold,mountains,foodie|Delegation is a skill.",
-    "Reaction to finding `$100 on the ground?|Buy a round of shots for strangers|party,city,hot|The life of the party!|Invest it immediately|culture,mild,luxury|Boring, but financially responsible.|Eat the most expensive steak in town|foodie,romance,relax|Treat yo' self!|Stash it in my mattress|budget,mountains,cold|Paranoia pays off.|Buy a weird sword online|adventure,nature,beach|Because why not?",
+    "Reaction to finding $100 on the ground?|Buy a round of shots for strangers|party,city,hot|The life of the party!|Invest it immediately|culture,mild,luxury|Boring, but financially responsible.|Eat the most expensive steak in town|foodie,romance,relax|Treat yo' self!|Stash it in my mattress|budget,mountains,cold|Paranoia pays off.|Buy a weird sword online|adventure,nature,beach|Because why not?",
     "If you were a ghost, how would you haunt people?|Slightly moving their keys so they think they're crazy|city,culture,budget|Psychological warfare. Brilliant.|Slamming doors and screaming|party,hot,adventure|The classic poltergeist approach.|Leaving romantic poems on the mirror in steam|romance,relax,mild|A very affectionate ghost.|Turning up the thermostat to ruin their electric bill|cold,nature,mountains|Financial ruin from beyond the grave.|Eating all the good snacks in the fridge|foodie,beach,luxury|A hungry spirit.",
     "What is your spirit emoji?|The upside-down smiling face|city,party,hot|Smiling through the pain.|The sparkle emoji|luxury,romance,mild|Shiny and flawless.|The absolute sobbing crying face|culture,relax,cold|So much emotion.|The monkey covering its eyes|beach,nature,budget|I pretend I do not see it.|The fire emoji|adventure,mountains,foodie|Hype beast.",
     "What is your strategy for surviving a zombie apocalypse?|Bunker down with a lifetime supply of canned beans|budget,relax,cold|Safe, bored, and gassy.|Grab a katana and go down swinging|adventure,hot,mountains|Main character syndrome.|Pretend to be a zombie. Blend in.|culture,city,mild|Modern problems require modern solutions.|Flee to a deserted island|beach,nature,romance|Zombies can't swim... right?|Offer the zombies a gourmet meal instead|foodie,luxury,party|Negotiation via snacks.",
@@ -342,7 +336,7 @@ parsed_dynamic_qs = []
 for q_str in raw_qs:
     parts = q_str.split("|")
     q_dict = {"q": parts[0], "opts": {}}
-    for i in range(1, 16, 3):
+    for i in range(1, len(parts), 3):
         if i+2 < len(parts):
             q_dict["opts"][parts[i]] = {"tags": parts[i+1].split(","), "cheeky": parts[i+2]}
     parsed_dynamic_qs.append(q_dict)
@@ -353,7 +347,7 @@ opposites = {
     "beach": "mountains", "mountains": "beach",
     "adventure": "relax", "relax": "adventure",
     "luxury": "budget", "budget": "luxury",
-    "party": "relax", "relax": "party"
+    "party": "relax"
 }
 
 if 'stage' not in st.session_state:
@@ -372,27 +366,40 @@ if 'stage' not in st.session_state:
 def set_stage(new_stage):
     st.session_state.stage = new_stage
 
+# UPGRADED VIBE ENGINE 1: Normalized Vibe Profile Matching
 def get_top_dests(n=10):
     scored = []
+    # Calculate total positive user energy to normalize scoring
+    total_positive_weight = sum(val for val in st.session_state.user_tags.values() if val > 0) or 1.0
+
     for d in st.session_state.available_dests:
-        dtags = dests[d]["t"]
-        score = 0
-        # Aggressive Tie-Breaker algorithm
-        # If the destination has the tags you picked, big points.
-        # If it lacks the tags you picked, harsh penalty.
-        for tag, val in st.session_state.user_tags.items():
-            if tag in dtags:
-                score += val
-            else:
-                score -= val * 0.5 
+        dtags = set(dests[d]["t"])
+        overlap_score = 0
+        penalty_score = 0
         
-        # Micro random injection prevents mathematical dead heats giving EVERY valid match an equal random chance
-        norm = score + random.uniform(0, 0.1)
+        for tag, val in st.session_state.user_tags.items():
+            if val > 0:
+                if tag in dtags:
+                    overlap_score += val
+                else:
+                    penalty_score += val * 0.2
+            elif val < 0 and tag in dtags:
+                penalty_score += abs(val) * 0.5
+        
+        # Percentage match normalized by the size of the destination profile
+        # Prevents 6-tag cities from always outscoring specialized 3-tag gems
+        coverage_ratio = overlap_score / total_positive_weight
+        density_bonus = overlap_score / (len(dtags) ** 0.5)
+        
+        final_score = (coverage_ratio * 60) + (density_bonus * 40) - penalty_score
+        # Slight dynamic tie-breaker ensures identical vibe profiles rotate evenly
+        norm = final_score + random.uniform(0, 0.4)
         scored.append((norm, d))
     
     scored.sort(reverse=True)
     return [x[1] for x in scored[:n]]
 
+# UPGRADED VIBE ENGINE 2: Differentiation Question Selector
 def get_next_question():
     if st.session_state.q_index < 3:
         return static_qs[st.session_state.q_index]
@@ -401,22 +408,28 @@ def get_next_question():
         return None
 
     top_dests = get_top_dests(10)
-    active_tags = set()
-    for d in top_dests:
-        active_tags.update(dests[d]['t'])
+    top_dest_tags = [set(dests[d]['t']) for d in top_dests]
 
+    best_q_idx = 0
+    best_differentiation_score = -1
+
+    # Find the question that splits the current top contenders the most evenly
     for i, q in enumerate(st.session_state.unused_qs):
         q_tags = set(tag for opt in q['opts'].values() for tag in opt['tags'])
-        if q_tags.intersection(active_tags):
-            return st.session_state.unused_qs.pop(i)
+        # Count how many of the top 10 destinations would be targeted by this question
+        hits = sum(1 for dtags in top_dest_tags if q_tags.intersection(dtags))
+        # Optimal variance is near 5 (splitting the top 10 in half)
+        differentiation = 5 - abs(5 - hits)
+        if differentiation > best_differentiation_score:
+            best_differentiation_score = differentiation
+            best_q_idx = i
 
-    return st.session_state.unused_qs.pop(0) 
+    return st.session_state.unused_qs.pop(best_q_idx)
 
 def handle_answer(selected_option):
-    # Engine is completely untouched here - any list of tags passed in will update the counter flawlessly
     weights = st.session_state.current_q["opts"][selected_option]["tags"]
     for tag in weights:
-        st.session_state.user_tags[tag] += 2
+        st.session_state.user_tags[tag] += 3
         if tag in opposites:
             st.session_state.user_tags[opposites[tag]] -= 2
 
@@ -425,6 +438,17 @@ def handle_answer(selected_option):
 
     if st.session_state.q_index >= 20 or not st.session_state.unused_qs:
         st.session_state.chosen_dest = get_top_dests(1)[0]
+        # UPGRADED VIBE ENGINE 3: Align Epic Activities to User Footprint
+        dest_data = dests[st.session_state.chosen_dest]
+        epic_acts = list(dest_data["e"])
+        # If user heavily prioritized adventure or foodie, shuffle/sort corresponding activities forward
+        top_user_vibes = [t for t, v in st.session_state.user_tags.most_common(3)]
+        if "adventure" in top_user_vibes or "mountains" in top_user_vibes:
+            epic_acts = sorted(epic_acts, key=lambda a: any(k in a.lower() for k in ["hike", "jump", "surf", "dive", "heli", "ski", "trek"]), reverse=True)
+        elif "relax" in top_user_vibes or "luxury" in top_user_vibes:
+            epic_acts = sorted(epic_acts, key=lambda a: any(k in a.lower() for k in ["cruise", "spa", "pool", "private", "sunset", "bathe"]), reverse=True)
+        dest_data["e"] = epic_acts
+        
         set_stage('final_match_reveal')
     else:
         st.session_state.current_q = get_next_question()
