@@ -34,13 +34,6 @@ def safe_image(prompt):
     html = f'<img src="{url}" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
     st.markdown(html, unsafe_allow_html=True)
 
-def animal_image(animal):
-    prompt = f"A cute cartoon {animal}, vibrant, isolated on a simple background"
-    encoded = urllib.parse.quote(prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=400&nologo=true"
-    html = f'<div style="text-align:center;"><img src="{url}" style="width:100%; max-width:500px; border-radius:25px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); margin-bottom: 20px;"></div>'
-    st.markdown(html, unsafe_allow_html=True)
-
 # ---------------------------------------------------------
 # 2. EXCLUSIVE DESTINATIONS (100 Globally Balanced)
 # ---------------------------------------------------------
@@ -167,7 +160,7 @@ for row in raw_dests:
     }
 
 # ---------------------------------------------------------
-# 3. STATIC & DYNAMIC QUESTION BANK
+# 3. STATIC & DYNAMIC QUESTION BANK (50 UNIQUE QUESTIONS)
 # ---------------------------------------------------------
 static_qs = [
     {"q": "Let's set the scene. When I whisk you away, what's the temperature? ☀️❄️", "opts": {
@@ -187,17 +180,58 @@ static_qs = [
         "Wild and free. We don't need money to have fun.": {"tags": ["budget", "nature"], "cheeky": "Just you, me, and zero distractions."}}}
 ]
 
+# 50 fully unique, confident, and balanced dynamic questions
 raw_qs = [
-    "If I kidnapped you for the weekend, what’s the one thing you’d hope I packed for you?|My sexiest dress. We are going out.|city,luxury,party|Oh, I'd definitely make sure that was in there.|Just a bikini. I want sun.|beach,relax,hot|I love the way you think.|My hiking boots. Let's get dirty.|adventure,mountains,nature|I'll definitely make you sweat.|Nothing. I want you to buy me a whole new wardrobe.|culture,foodie,luxury|Spoiling you is my favorite hobby.|A cozy oversized sweater.|cold,romance,mild|You look so damn cute in my clothes.",
-    "When we're out together in a crowded room, what's your favorite secret way to get my attention?|Giving me that specific look from across the bar.|city,luxury,culture|You know exactly what that look does to me.|Brushing your hand against me under the table.|romance,relax,mild|It takes everything in me not to drag you out of there.|Whispering something wicked in my ear.|party,hot,adventure|You’re a menace. I love it.|Stealing a bite of my food so I look at you.|foodie,budget,nature|You can have whatever you want.|Texting me from two feet away.|beach,cold,mountains|Sneaky. And highly effective.",
-    "I love taking the lead, but tell me… what’s your favorite way to try and take charge?|Telling me exactly what you want me to do to you.|hot,party,adventure|Keep talking like that. See what happens.|Planning out our entire evening down to the minute.|city,culture,luxury|I love watching you get bossy.|Pinning me down when I'm not expecting it.|mountains,nature,cold|You think you're so strong. It's adorable.|Refusing to let me get out of bed.|relax,beach,mild|I’ll never fight you on that.|Ordering for me at dinner because you know what I like.|foodie,romance,budget|You do know me perfectly.",
-    "If we canceled all our plans and stayed in bed all weekend, what's the one rule?|Silk sheets and room service only.|luxury,city,culture|You look incredible in silk.|We only get up for food.|adventure,hot,party|I'll work up your appetite.|No phones, total isolation.|nature,mountains,cold|Just the way I want you. All to myself.|Movie marathon in our underwear.|beach,relax,mild|I won't be paying attention to the movie.|Cooking a massive feast together.|foodie,budget,romance|I love watching you get messy.",
-    "What's your absolute favorite way that I distract you?|Whispering something entirely inappropriate.|adventure,mountains,nature|I love watching you blush.|Buying you something you didn't even know you wanted.|luxury,romance,city|Spoiling you is way too easy.|Pulling you close when you're trying to work.|relax,beach,cold|You love it when I don't let you work.|Looking at you that specific way.|culture,party,hot|You know the exact look I mean.|Making you laugh until you forget what you were doing.|foodie,mild,budget|I love that smile.",
-    "When I tell you to pack a bag for a surprise trip, how do you react?|I trust you completely. I'm ready.|adventure,nature,budget|Good girl. Leave it to me.|I demand to know exactly what I should wear.|city,culture,cold|Don't worry, you won't be wearing much anyway.|I overpack 15 outfits just in case.|relax,beach,mild|I'll just unpack the ones I don't like.|I grab my sexiest dress and my passport.|party,hot,luxury|That's literally all you need.|I ask what we're eating.|foodie,romance,mountains|Priorities. I've already booked the best spot.",
-    "What's that one wicked trait of yours that I secretly find completely irresistible?|I know exactly how to push your buttons.|adventure,mountains,nature|And you love the consequences.|I expect to be treated like absolute royalty.|luxury,romance,city|Your wish is my command.|I'll ignore you until you give me attention.|relax,beach,cold|I always give you what you want eventually.|I always need the last word.|culture,party,hot|I know exactly how to shut you up.|I steal your clothes and refuse to give them back.|foodie,mild,budget|Keep them. They look better on you.",
-    "If I gave you a blank check for one perfect night out with me, what are you wearing to make my jaw drop?|Something extremely tight and black.|city,luxury,culture|I won't be able to keep my hands off you.|Something totally backless.|beach,relax,mild|I love tracing my fingers down your spine.|Something short and bright red.|foodie,party,hot|You are going to ruin me.|Something elegant but completely see-through.|adventure,mountains,cold|I love how confident you are.|Nothing but one of my button-down shirts.|nature,budget,relax|Best outfit on the list.",
-    "When we’re taking our sweet time on a lazy Sunday morning, how do you want me to wake you up?|With coffee and a kiss on the neck.|city,luxury,culture|I know all your sensitive spots.|By pulling you tighter against me.|romance,relax,mild|I never want to let you go.|By whispering what we're doing later.|party,hot,adventure|I love giving you something to look forward to.|With a massive breakfast in bed.|foodie,budget,nature|I love feeding you.|By gently running my hands all over you.|beach,cold,mountains|I could do that for hours.",
-    "You always know how to earn my undivided attention. What’s a secret fantasy you’ve been waiting to tell me about?|Doing something we shouldn't, somewhere public.|party,adventure,hot|I love a girl who takes risks.|A totally private, candlelit evening where I do all the work.|luxury,city,romance|Sit back and let me take over.|Getting caught in a massive rainstorm together.|budget,beach,nature|I love you soaking wet.|A completely blindfolded tasting menu.|culture,foodie,mild|Trust me. I'll make it taste amazing.|Being tied up in a cabin in the woods.|cold,mountains,relax|I've been waiting for you to say that."
+    "If I kidnapped you for the weekend, what’s the one thing you’d hope I packed for you?|My sexiest dress. We are going out.|city,luxury,party|Oh, I'd definitely make sure that was in there.|Just a bikini. I want sun.|beach,relax,hot|I love the way you think.|My hiking boots. Let's get dirty.|adventure,mountains,nature|I'll definitely make you sweat.|Nothing. Buy me a whole new wardrobe.|culture,foodie,luxury|Spoiling you is my favorite hobby.",
+    "When we're out together in a crowded room, what's your favorite secret way to get my attention?|Giving me that specific look from across the bar.|city,luxury,culture|You know exactly what that look does to me.|Brushing your hand against me under the table.|romance,relax,mild|It takes everything in me not to drag you out of there.|Whispering something wicked in my ear.|party,hot,adventure|You’re a menace. I love it.|Stealing a bite of my food so I look at you.|foodie,budget,nature|You can have whatever you want.",
+    "I love taking the lead, but tell me… what’s your favorite way to try and take charge?|Telling me exactly what you want me to do to you.|hot,party,adventure|Keep talking like that. See what happens.|Planning out our entire evening down to the minute.|city,culture,luxury|I love watching you get bossy.|Pinning me down when I'm not expecting it.|mountains,nature,cold|You think you're so strong. It's adorable.|Ordering for me at dinner because you know what I like.|foodie,romance,budget|You do know me perfectly.",
+    "If we canceled all our plans and stayed in bed all weekend, what's the one rule?|Silk sheets and room service only.|luxury,city,culture|You look incredible in silk.|We only get up for food.|adventure,hot,party|I'll work up your appetite.|No phones, total isolation.|nature,mountains,cold|Just the way I want you. All to myself.|Cooking a massive feast together.|foodie,budget,romance|I love watching you get messy.",
+    "What's your absolute favorite way that I distract you?|Whispering something entirely inappropriate.|adventure,mountains,nature|I love watching you blush.|Buying you something you didn't even know you wanted.|luxury,romance,city|Spoiling you is way too easy.|Pulling you close when you're trying to work.|relax,beach,cold|You love it when I don't let you work.|Looking at you that specific way.|culture,party,hot|You know the exact look I mean.",
+    "When I tell you to pack a bag for a surprise trip, how do you react?|I trust you completely. I'm ready.|adventure,nature,budget|Good girl. Leave it to me.|I demand to know exactly what I should wear.|city,culture,cold|Don't worry, you won't be wearing much anyway.|I overpack 15 outfits just in case.|relax,beach,mild|I'll just unpack the ones I don't like.|I grab my sexiest dress and my passport.|party,hot,luxury|That's literally all you need.",
+    "What's that one wicked trait of yours that I secretly find completely irresistible?|I know exactly how to push your buttons.|adventure,mountains,nature|And you love the consequences.|I expect to be treated like absolute royalty.|luxury,romance,city|Your wish is my command.|I always need the last word.|culture,party,hot|I know exactly how to shut you up.|I steal your clothes and refuse to give them back.|foodie,mild,budget|Keep them. They look better on you.",
+    "If I gave you a blank check for one perfect night out with me, what are you wearing?|Something extremely tight and black.|city,luxury,culture|I won't be able to keep my hands off you.|Something totally backless.|beach,relax,mild|I love tracing my fingers down your spine.|Something short and bright red.|foodie,party,hot|You are going to ruin me.|Nothing but one of my button-down shirts.|nature,budget,relax|Best outfit on the list.",
+    "When we’re taking our sweet time on a lazy Sunday morning, how do you want me to wake you up?|With coffee and a kiss on the neck.|city,luxury,culture|I know all your sensitive spots.|By pulling you tighter against me.|romance,relax,mild|I never want to let you go.|By whispering what we're doing later.|party,hot,adventure|I love giving you something to look forward to.|With a massive breakfast in bed.|foodie,budget,nature|I love feeding you.",
+    "You always know how to earn my undivided attention. What’s a secret fantasy you’ve been waiting to tell me?|Doing something we shouldn't, somewhere public.|party,adventure,hot|I love a girl who takes risks.|A totally private, candlelit evening where I do all the work.|luxury,city,romance|Sit back and let me take over.|Getting caught in a massive rainstorm together.|budget,beach,nature|I love you soaking wet.|A completely blindfolded tasting menu.|culture,foodie,mild|Trust me. I'll make it taste amazing.",
+    "When we're out to dinner and I can't stop staring at you, what's going through your mind?|I know exactly what you're thinking.|luxury,city,culture|Oh, I bet you do.|I'm trying not to blush.|romance,relax,mild|It's not working, and I love it.|I'm daring you to do something about it.|party,hot,adventure|Careful what you wish for.|I'm staring right back.|cold,mountains,beach|Good. Don't look away.",
+    "If I cleared your schedule for a completely free afternoon, what are we doing?|Something that gets our adrenaline pumping.|adventure,mountains,nature|I like your energy.|Finding a dark, quiet corner in a cocktail bar.|city,luxury,party|Just you and me. Perfect.|Getting lost wandering around somewhere beautiful.|culture,mild,budget|I'd follow you anywhere.|Absolutely nothing. Just us, horizontal.|relax,cold,romance|Best idea yet.",
+    "What's your favorite way to get us into a little bit of trouble?|Sneaking into somewhere we definitely shouldn't be.|adventure,party,city|I love it when you're bad.|Ordering way too many expensive drinks.|luxury,hot,culture|I'll buy you the whole bar.|Convincing me to skip our plans and stay in.|cold,mountains,nature|You never have to ask twice.|Stealing a kiss somewhere very public.|beach,foodie,budget|I don't care who's watching.",
+    "I pull up outside your house to take you away. What are we driving off in?|A sleek, blacked-out sports car.|city,luxury,party|Fast and dangerous. Just like you.|An open-top Jeep.|beach,hot,adventure|Sun on your skin, wind in your hair.|A rugged 4x4. We're going off-grid.|mountains,nature,cold|Nobody will find us.|I don't care, as long as you're driving.|relax,foodie,budget|I've got you.",
+    "After a long, exhausting day, exactly how am I taking care of you?|Running a hot bath and pouring the wine.|luxury,relax,mild|Sink in. I've got this.|A deep, slow massage.|romance,hot,beach|I'll work out every knot.|Taking you out for a massive, messy meal.|foodie,city,culture|I love spoiling your appetite.|Building a fire and pulling you close.|cold,mountains,nature|I'll keep you warm.",
+    "When I tell you to close your eyes and hold out your hand, what are you hoping I give you?|Plane tickets to somewhere we've never been.|adventure,nature,culture|Pack your bags, gorgeous.|Something shiny in a small box.|luxury,city,romance|You have expensive taste.|A key to our own private villa.|beach,hot,relax|I'll make sure there are no neighbors.|Something sweet that you baked for me.|foodie,budget,mild|I love taking care of you.",
+    "How do you usually react when I catch you staring at me?|I hold eye contact and bite my lip.|party,hot,adventure|You know exactly what that does to me.|I look away and pretend I wasn't.|relax,beach,mild|You're so cute when you're shy.|I smile and walk over to you.|city,luxury,culture|I love how confident you are.|I tell you exactly what I was thinking about.|mountains,nature,cold|I love it when you're direct.",
+    "If I told you to pick our next date, what's your opening move?|A high-end restaurant where we dress to kill.|luxury,city,foodie|I love showing you off.|A physical challenge. Let's see who wins.|adventure,mountains,nature|I'll let you win. Maybe.|A massive party where we dance until dawn.|party,hot,culture|I'll keep my hands on you all night.|A secret spot where no one can find us.|relax,beach,romance|My favorite place to be.",
+    "When we are completely alone, what is your favorite way to be touched?|A slow hand running through my hair.|relax,mild,romance|I could do that for hours.|A firm grip on my waist.|party,hot,adventure|I love pulling you against me.|Tracing my jawline before you kiss me.|city,luxury,culture|You have the most beautiful face.|A surprise hug from behind.|nature,mountains,cold|I love wrapping you up.",
+    "What is the most attractive thing I can do for you without saying a word?|Take control of the situation when I'm stressed.|city,luxury,relax|Just breathe. I've got it.|Pour me a drink exactly how I like it.|foodie,party,culture|I pay attention to the details.|Pick me up and carry me to bed.|hot,adventure,mountains|You are light as a feather.|Look at me from across the room with that smirk.|romance,mild,beach|I can't help myself around you.",
+    "What's your signature move when you want me to skip a workout and stay with you?|Straddling my lap while I'm tying my shoes.|hot,party,adventure|That works literally every time.|Promising me something better if I stay.|city,luxury,culture|I'm listening...|Giving me that sad, puppy-dog look.|relax,beach,mild|You know I can't say no to that face.|Telling me you'll cook my favorite meal.|foodie,budget,nature|You know exactly how to bribe me.",
+    "If I walked into the room and saw you wearing my favorite outfit of yours, what happens next?|We're going out so I can show you off.|city,luxury,party|Everyone is going to be jealous of me.|We are definitely not leaving the house.|hot,romance,relax|That outfit is coming right back off.|I'd spin you around to get a better look.|culture,mild,foodie|You look absolutely perfect.|I'd take you somewhere remote so you're all mine.|adventure,mountains,nature|No sharing tonight.",
+    "What is your ultimate guilty pleasure when it's just the two of us?|Eating absolute junk food in a five-star hotel bed.|foodie,luxury,city|I love your style.|Skinny dipping in the dark.|adventure,hot,beach|I love how wild you are.|Binge-watching trash TV while I play with your hair.|relax,budget,mild|I'll watch whatever you want.|Drinking too much wine and telling each other secrets.|party,culture,romance|Your secrets are safe with me.",
+    "When I pull you close by the waist, what's your first instinct?|To wrap my arms around your neck.|romance,relax,mild|Right where you belong.|To look up at your lips.|hot,party,adventure|I'll take the hint.|To lean into your chest and sigh.|cold,mountains,nature|I love holding you.|To whisper something teasing in your ear.|city,luxury,culture|You just love playing games.",
+    "If I booked us a private cabin in the woods, how are we spending the first night?|Drinking whiskey by a massive roaring fire.|cold,mountains,relax|I'll keep you warm.|Testing out how sturdy the bed is.|hot,adventure,party|I'm sure we can break it.|Cooking a massive steak dinner together.|foodie,budget,nature|I love feeding you.|Sitting on the porch, completely off the grid.|culture,mild,romance|Just the two of us. Perfect.",
+    "When we get into a playful argument, how do you usually try to win?|By using my charm until you cave.|city,luxury,romance|You know I have zero defense against you.|By stubbornly refusing to back down.|mountains,nature,adventure|I love how fierce you are.|By distracting you with a kiss.|hot,party,beach|That is completely unfair. Do it again.|By making you laugh until you forget why you're mad.|foodie,relax,budget|I love your laugh.",
+    "If I told you I had a massive surprise planned for tonight, how do you prepare?|I spend two hours getting incredibly dressed up.|luxury,city,culture|I can't wait to see you.|I try to guess what it is relentlessly.|adventure,party,hot|I'm not telling you anything.|I just relax and let you take the wheel.|relax,beach,mild|I promise you'll love it.|I make sure I'm hungry.|foodie,nature,budget|Smart girl.",
+    "What is your absolute favorite compliment that I give you?|When you tell me I look insanely sexy.|hot,party,adventure|Because you always do.|When you praise me for something smart I did.|city,culture,luxury|I love your brain.|When you tell me I make you crazy.|romance,relax,beach|You have no idea what you do to me.|When you tell me I taste good.|foodie,mountains,nature|I could eat you up.",
+    "If we were trapped on a deserted island, what role do you naturally take?|I'm sunbathing while you build the shelter.|beach,relax,luxury|I wouldn't have it any other way.|I'm foraging for wild fruits and coconuts.|foodie,nature,budget|My little survivor.|I'm exploring the jungle to see what's out there.|adventure,mountains,hot|Stay close to me.|I'm organizing our rescue plan.|city,culture,mild|I love how bossy you are.",
+    "What's your preferred method of being spoiled after a stressful week?|A massive shopping spree on your card.|luxury,city,party|Go ahead, ruin me.|A spa day where I don't have to lift a finger.|relax,beach,mild|You deserve to be pampered.|A wild night out to forget all my problems.|adventure,hot,culture|I'll make sure you forget everything.|Comfort food and cuddling on the couch.|foodie,budget,nature|I'll hold you as long as you need.",
+    "When I look at you from across a crowded room, what do you want my eyes to say?|'You look incredible.'|luxury,city,romance|You always steal the show.|'We are leaving right now.'|hot,party,adventure|I'll have the car waiting.|'I can't wait to get you alone.'|relax,beach,mild|I really can't.|'You're mine.'|mountains,nature,cold|Absolutely. All mine.",
+    "If I took you to a Michelin-star restaurant, how are we ordering?|You order for me. You know what I like.|luxury,city,culture|I know exactly how to feed you.|We order the tasting menu and try everything.|foodie,romance,mild|I love exploring with you.|We order the most expensive thing on the menu.|party,hot,adventure|Let's drain the bank account.|We get dessert first.|relax,budget,nature|I like the way you think.",
+    "What is your favorite way for me to show off my strength?|Picking you up effortlessly.|adventure,mountains,hot|You weigh absolutely nothing to me.|Opening jars you can't open.|foodie,relax,budget|I am your personal jar opener.|Pinning your wrists above your head.|party,city,luxury|I love feeling you surrender.|Carrying all the heavy bags so you don't have to.|culture,beach,mild|I'll carry whatever you need.",
+    "If I told you to close your eyes, what's the first thing you feel?|Your lips on my neck.|hot,party,romance|Right on your sweet spot.|Your hands on my waist.|adventure,nature,mountains|I love grabbing you.|A cold glass of champagne put in my hand.|luxury,city,beach|Only the best for you.|A bite of something delicious.|foodie,culture,relax|Open wide.",
+    "When we are traveling, what is your biggest flex?|I can fall asleep anywhere, instantly.|relax,beach,mild|I love watching you sleep.|I always find the best secret local bars.|party,city,culture|I love drinking with you.|I look amazing even after a 10-hour flight.|luxury,romance,hot|You literally always look flawless.|I can pack my entire life into a carry-on.|adventure,nature,budget|Efficient and sexy.",
+    "If I wanted to make you completely melt, what is the exact phrase I should whisper?|'You are so beautiful.'|romance,relax,mild|I mean it every time.|'Let me take care of that.'|city,luxury,culture|I love handling things for you.|'Get in the car.'|adventure,hot,party|I love bossing you around.|'I bought you food.'|foodie,nature,budget|The true key to your heart.",
+    "When I catch you wearing my hoodie, what is your excuse?|'It smells exactly like you.'|romance,relax,cold|You can keep it.|'I was cold, and you weren't here to warm me up.'|nature,mountains,mild|I'll warm you up right now.|'It looks better on me anyway.'|city,party,hot|You're right. It really does.|'I didn't think you'd mind.'|budget,beach,culture|I never mind.",
+    "If we went to a wild masquerade ball, what is our dynamic?|We are the most elegantly dressed couple there.|luxury,city,culture|We belong on a red carpet.|We ditch the party to find a private balcony.|romance,relax,mild|I only want to look at you.|We dance until our masks fall off.|party,hot,adventure|I'll keep up with you.|We spend the night judging everyone else's outfits.|foodie,budget,nature|I love gossiping with you.",
+    "What is your favorite way for us to share a dessert?|I eat most of it, you get one bite.|foodie,budget,relax|I'll let you have it all.|Feeding it to each other slowly.|romance,luxury,city|I love the taste of you.|Eating it in bed and making a mess.|hot,party,adventure|I'll clean you up.|Ordering two different ones so we can swap.|culture,mild,nature|Perfectly balanced.",
+    "If I challenged you to a game with a wager, what are you betting?|The loser has to pay for dinner.|foodie,city,culture|I hope you're hungry.|The loser has to give a full-body massage.|relax,beach,mild|I'll happily lose that bet.|The loser has to do whatever the winner says for 24 hours.|hot,party,adventure|You are playing a very dangerous game.|The loser has to jump in the pool fully clothed.|nature,mountains,budget|I love seeing you wet.",
+    "When we're holding hands in public, what is your favorite subtle adjustment?|When I rub my thumb over your knuckles.|romance,relax,mild|I love keeping you calm.|When I pull you slightly behind me through a crowd.|adventure,mountains,nature|I'll always lead the way.|When I squeeze your hand tightly when I'm jealous.|party,hot,city|You belong to me.|When I kiss the back of your hand.|luxury,culture,foodie|Treating you like royalty.",
+    "If we took a private yacht out for the day, where are you spending most of your time?|Laying on the deck getting completely tanned.|beach,hot,relax|I'll rub the oil on you.|Drinking cocktails in the hot tub.|luxury,party,city|I love your lavish side.|Jumping off the back into the deep water.|adventure,nature,budget|You fearless little thing.|Eating fresh seafood in the shaded cabin.|foodie,culture,mild|I love watching you enjoy yourself.",
+    "What is the most attractive piece of clothing I can wear for you?|A perfectly tailored suit.|luxury,city,culture|I clean up well for you.|Sweatpants and a plain white tee.|relax,budget,mild|Keeping it simple.|Swim trunks and messy hair.|beach,hot,adventure|You like me a little rugged.|An apron while I cook for you.|foodie,romance,nature|I'll cook you whatever you want.",
+    "When I tell you 'We need to talk,' what is your immediate reaction?|'What did I do?'|relax,mild,budget|You're always innocent, aren't you?|'What did YOU do?'|party,hot,adventure|Fair question. I'm usually the trouble.|'Just tell me, I can handle it.'|city,luxury,culture|I love how strong you are.|'Can we talk over food?'|foodie,nature,mountains|Always thinking with your stomach.",
+    "If we got stuck in an elevator for three hours, how do we pass the time?|Making out until the rescue team arrives.|hot,party,romance|They might have to wait for us to finish.|Playing 20 questions and getting deep.|culture,mild,relax|I love picking your brain.|Panicking while you try to calm me down.|city,luxury,beach|I'll always keep you safe.|Prying the doors open ourselves.|adventure,mountains,nature|We don't need rescuing.",
+    "What is your favorite way for me to say 'I love you' without using words?|Holding the door and pulling out my chair.|luxury,city,culture|Chivalry isn't dead with us.|Kissing my forehead before you leave the house.|romance,relax,mild|I always want you to feel protected.|Smacking my ass when I walk by.|party,hot,adventure|I literally cannot resist.|Bringing me coffee in bed.|foodie,budget,nature|I know exactly how you like it.",
+    "If I took you to a secluded beach at midnight, what is our main objective?|A romantic moonlit walk in the sand.|relax,beach,romance|I love the quiet moments with you.|Going skinny dipping in the dark ocean.|hot,adventure,party|You are so delightfully bad.|Building a bonfire and roasting marshmallows.|foodie,nature,mountains|I'll keep you warm.|Drinking a bottle of expensive champagne.|luxury,city,culture|Only the finest for my girl.",
+    "When you're mad at me, what is the fastest way for me to win you back?|Admitting you were right all along.|city,luxury,culture|You are always right.|Buying me food.|foodie,budget,nature|A classic, foolproof strategy.|Pinning me against the wall and kissing me hard.|hot,party,adventure|I know how to shut you up.|Giving me space, then drawing me a bath.|relax,beach,mild|I know how to take care of you.",
+    "If we were in a high-speed car chase, what is your role in the passenger seat?|Screaming and holding on for dear life.|relax,mild,beach|Don't worry, I'm a great driver.|Hanging out the window firing back.|adventure,hot,party|My beautiful partner in crime.|Navigating and barking directions at me.|city,luxury,culture|I love when you take charge.|Eating the snacks we stole.|foodie,nature,budget|Priorities. I respect it.",
+    "What is the most irresistible thing about my personality?|Your insane confidence.|city,luxury,hot|I only have it because you're mine.|Your sense of humor.|party,budget,adventure|I love making you smile.|Your protective nature.|mountains,nature,cold|Nobody will ever mess with you.|Your ambition.|culture,foodie,mild|I want to give you the world."
 ]
 
 parsed_dynamic_qs = []
@@ -208,13 +242,6 @@ for q_str in raw_qs:
         if i+2 < len(parts):
             q_dict["opts"][parts[i]] = {"tags": parts[i+1].split(","), "cheeky": parts[i+2]}
     parsed_dynamic_qs.append(q_dict)
-
-# Cute cartoon animals specifically requested
-animals = [
-    "Anteater", "Silly goose", "Crocodile", "Bear", "Hedgehog", 
-    "Sheepdog", "Kitten", "Sloth", "Capybara", "Seal", 
-    "Dolphin", "Monkey", "Squirrel", "Giraffe"
-]
 
 # ---------------------------------------------------------
 # 4. ENGINE LOGIC & ANTI-TAG ALGORITHM
@@ -237,10 +264,8 @@ if 'stage' not in st.session_state:
     st.session_state.activities = []
     st.session_state.activity_round = 0
     st.session_state.last_cheeky = ""
+    # We now have exactly 50 unique dynamic questions. No duplication needed.
     st.session_state.unused_qs = list(parsed_dynamic_qs)
-    # Loop questions if we need more than we have
-    while len(st.session_state.unused_qs) < 20:
-        st.session_state.unused_qs += list(parsed_dynamic_qs)
     random.shuffle(st.session_state.unused_qs)
     st.session_state.current_q = None
 
@@ -252,7 +277,8 @@ def get_top_dests(n=10):
     for d in st.session_state.available_dests:
         dtags = dests[d]["t"]
         score = sum(st.session_state.user_tags[t] for t in dtags if t in st.session_state.user_tags)
-        norm = (score / len(dtags)) + random.uniform(0, 0.05)
+        # Mathematical Tie-Breaker (Increased to 0.25 to prevent any single region dominating)
+        norm = (score / len(dtags)) + random.uniform(0, 0.25)
         scored.append((norm, d))
     scored.sort(reverse=True)
     return [x[1] for x in scored[:n]]
@@ -286,9 +312,11 @@ def handle_answer(selected_option):
     st.session_state.last_cheeky = st.session_state.current_q["opts"][selected_option]["cheeky"]
     st.session_state.q_index += 1
     
+    # 10 questions answered (Index hits 10) = Stick or Risk
     if st.session_state.q_index == 10:
         set_stage('stick_or_risk')
-    elif st.session_state.q_index >= 12 or not st.session_state.unused_qs:
+    # 20 questions answered total (Index hits 20) = Final Match
+    elif st.session_state.q_index >= 20 or not st.session_state.unused_qs:
         st.session_state.chosen_dest = get_top_dests(1)[0]
         set_stage('final_match_reveal')
     else:
@@ -343,10 +371,6 @@ elif st.session_state.stage == 'questions':
     
     q_data = st.session_state.current_q
     
-    # Render the requested cute cartoon animal specifically for this page!
-    current_animal = animals[st.session_state.q_index % len(animals)]
-    animal_image(current_animal)
-    
     st.markdown(f"<h1 style='font-size: 40px; text-align: center;'>{q_data['q']}</h1><br>", unsafe_allow_html=True)
     
     options = list(q_data["opts"].keys())
@@ -357,7 +381,7 @@ elif st.session_state.stage == 'questions':
     with col2:
         st.button("LOCK IT IN! 🔒➡️", on_click=handle_answer, args=(choice,))
     
-    st.progress(st.session_state.q_index / 12)
+    st.progress(st.session_state.q_index / 20)
 
 elif st.session_state.stage == 'stick_or_risk':
     best_dest = get_top_dests(1)[0]
