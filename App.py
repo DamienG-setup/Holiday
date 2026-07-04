@@ -266,22 +266,28 @@ for row in raw_dests:
         "e": [parts[10], parts[11], parts[12], parts[13], parts[14], parts[15]]
     }
 
+# UPDATED STATIC QUESTIONS - Now with 5 balanced answers each
 static_qs = [
     {"q": "First things first. What is your absolute ideal climate? ☀️❄️", "opts": {
         "Roasting hot. Bake me like a potato.": {"tags": ["hot"], "cheeky": "Factor 50 sunscreen required. We are chasing the sun."},
         "Brisk, freezing, and covered in snow.": {"tags": ["cold"], "cheeky": "Elsa vibes. The cold never bothered you anyway."},
-        "Mild, breezy, and perfect for a light jacket.": {"tags": ["mild"], "cheeky": "Ah, the Goldilocks zone. Not too hot, not too cold."}
+        "Mild, breezy, and perfect for a light jacket.": {"tags": ["mild"], "cheeky": "Ah, the Goldilocks zone. Not too hot, not too cold."},
+        "Dry, intense heat. Give me the desert sun.": {"tags": ["hot", "nature"], "cheeky": "Hydration is key. You're a true sun-worshipper."},
+        "Crisp, cool air where I can comfortably wear a sweater.": {"tags": ["cold", "relax"], "cheeky": "Cozy vibes only. Hot chocolate weather."}
     }},
     {"q": "What is the desired pace for this trip? 🏃‍♂️🧘‍♀️", "opts": {
         "Extreme adventure. I want to risk my life.": {"tags": ["adventure", "mountains"], "cheeky": "Adrenaline junkie confirmed. Hope your insurance is paid up."},
         "Total relaxation. I want to forget my own name.": {"tags": ["relax", "beach"], "cheeky": "Brain empty. Vibes only. Let's chill."},
         "Chaos, culture, and non-stop exploring.": {"tags": ["city", "culture"], "cheeky": "You're going to need a vacation to recover from this holiday."},
-        "Partying until the sun comes up.": {"tags": ["party"], "cheeky": "Sleep is for the weak. Let's rage."}
+        "Partying until the sun comes up.": {"tags": ["party", "city"], "cheeky": "Sleep is for the weak. Let's rage."},
+        "Slow living, cafe hopping, and eating my way through town.": {"tags": ["foodie", "relax"], "cheeky": "A true connoisseur of the good life."}
     }},
     {"q": "What is your budget/travel style? 💸🎒", "opts": {
         "Unlimited wealth. Spoil me absolutely rotten.": {"tags": ["luxury"], "cheeky": "Sugar daddy vibes. Let's drain the bank account."},
         "A mix of cheap street food and one fancy splurge.": {"tags": ["foodie", "culture"], "cheeky": "Sensible, yet indulgent. The perfect balance."},
-        "I just need a tent, some rice, and good vibes.": {"tags": ["budget", "nature"], "cheeky": "Dirt cheap and loving it. Nature is free."}
+        "I just need a tent, some rice, and good vibes.": {"tags": ["budget", "nature"], "cheeky": "Dirt cheap and loving it. Nature is free."},
+        "Boutique hotels, aesthetic cafes, and paying for convenience.": {"tags": ["luxury", "relax"], "cheeky": "Aesthetic over everything. Very Instagram."},
+        "Hostels for sleeping, but big money for partying and activities.": {"tags": ["budget", "party"], "cheeky": "The classic backpacker hustle."}
     }}
 ]
 
@@ -407,6 +413,7 @@ def get_next_question():
     return st.session_state.unused_qs.pop(0) 
 
 def handle_answer(selected_option):
+    # Engine is completely untouched here - any list of tags passed in will update the counter flawlessly
     weights = st.session_state.current_q["opts"][selected_option]["tags"]
     for tag in weights:
         st.session_state.user_tags[tag] += 2
@@ -544,7 +551,6 @@ elif st.session_state.stage == 'final_itinerary':
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # Re-routed seamlessly to the animals page, skipping the multi-picture API bottleneck
         st.button("SEE LOCAL WILDLIFE & ACTIVITIES ➡️", on_click=set_stage, args=('animals_page',))
 
 elif st.session_state.stage == 'animals_page':
