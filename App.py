@@ -1,18 +1,3 @@
-Here is the updated code with all your requests implemented:
-
-1.  Bias Fix: The scoring system no longer divides the score by the
-    destination's tag count. Previously, destinations with fewer tags (like
-    Cinque Terre) had a mathematical advantage. They are now evaluated evenly
-    based on your raw aligned answers.
-2.  Removed "TikTok": The word "TikTok" has been completely removed from the
-    welcome screen and substituted.
-3.  Removed "Stick or Risk": The 10th-question popup has been deleted. You will
-    now smoothly flow through the questions and go straight to your final match.
-4.  3-Page Final Match Layout: The Final Itinerary screen now uses a sleek
-    tabbed layout, featuring your chosen itinerary, a gallery of scenic
-    AI-generated pictures, and a dynamic list of unpicked activities and local
-    animals extracted from the region.
-
 import streamlit as st
 import random
 import urllib.parse
