@@ -34,7 +34,8 @@ def safe_image(prompt, seed=None):
     clean_prompt = "".join(c for c in prompt if c.isalnum() or c == " ")
     encoded = urllib.parse.quote(clean_prompt)
     url = f"https://image.pollinations.ai/prompt/{encoded}?width=1200&height=700&nologo=true&seed={seed}"
-    html = f'<img src="{url}" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
+    # Added onerror to hide image if the API fails, preventing ugly broken icons
+    html = f'<img src="{url}" onerror="this.style.display=\'none\'" style="width:100%; max-height:500px; object-fit:cover; border-radius:25px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); margin-bottom: 25px;">'
     st.markdown(html, unsafe_allow_html=True)
 
 raw_dests = [
@@ -65,7 +66,7 @@ raw_dests = [
     "Jaipur (India)|hot,city,culture,romance|#FF4500|jaipur india pink city palaces desert|Royal Rajasthani Thali in a converted palace|Eat ultra-spicy Laal Maas curry|Cocktails on a palace rooftop|Drink fresh Lassi from a clay pot|Explore the insanely intricate Hawa Mahal Palace of Winds|Get a traditional Henna tattoo|Take a hot air balloon over the desert forts|Ride a jeep up to the massive Amber Fort|Sleep like royalty in an actual Maharaja's palace|Spot wild Bengal Tigers in Ranthambore on safari|Shop for precious gems and textiles|Watch a snake charmer in the street markets",
     "Maldives|hot,beach,relax,luxury,romance|#00CED1|maldives overwater bungalow crystal ocean|Dine in an all-glass underwater restaurant|Have a private beach BBQ cooked by a personal chef|Champagne delivered to your pool via floating tray|Drink coconut cocktails on a deserted sandbank|Slide directly from your overwater bungalow into the ocean|Night swim with glowing bioluminescent plankton|Take a private seaplane over the gorgeous atolls|Scuba dive with massive gentle Manta Rays|Go deep sea fishing for Yellowfin Tuna|Take a submarine tour of the vibrant coral reefs|Couples spa day on a glass floor over the ocean|Watch an outdoor movie at a jungle cinema",
 
-    # AMERICAS
+    # AMERICAS & NON-EUROPE VIRAL
     "New York City (USA)|mild,cold,city,foodie,luxury,culture|#4682B4|new york city times square skyline|Eat the viral Suprême croissant at Lafayette|Eat a massive greasy slice of NY pizza|Martinis in a high-end hidden speakeasy|Drink cheap beers at a gritty Brooklyn dive bar|Take mind-bending photos in the SUMMIT One Vanderbilt|Ice skate in Central Park|Take a helicopter doors-off tour over Manhattan|Watch a smash-hit Broadway musical from VIP seats|Attend a crazy underground warehouse party in Brooklyn|Go on a massive shopping spree on 5th Avenue|Eat a massive pastrami sandwich at Katz's Deli|Walk the High Line elevated park at sunset",
     "Los Angeles (USA)|hot,city,beach,party,luxury|#FF1493|los angeles hollywood palm trees sunset|Eat at the viral Erewhon bakery|Eat tacos from a street truck at 2 AM|Drink insanely expensive green juice|Drink cocktails on a West Hollywood rooftop|Hike to the Hollywood sign|Rollerblade down Venice Beach|Take a VIP studio backlot tour|Surf the waves in Malibu|Drive a convertible down the Pacific Coast Highway|Party with celebrities in Beverly Hills|Shop on Rodeo Drive|Take a helicopter tour over the mansions",
     "San Francisco (USA)|mild,city,foodie,culture,adventure|#1E90FF|san francisco golden gate bridge cable car|10-course Michelin star tasting menu in Soma|Eat Clam Chowder out of a massive sourdough bowl|Wine tasting trip to Napa Valley via private limo|Drink Irish Coffees at the Buena Vista|Hang off the side of a moving Cable Car|Have a picnic at the Painted Ladies|Take a terrifying midnight Alcatraz ghost tour|Bike across the Golden Gate Bridge|Skydive directly over the Bay|Hike among massive Redwoods in Muir Woods|Eat giant burritos in the Mission District|Sail a catamaran under the Golden Gate Bridge",
@@ -91,9 +92,9 @@ raw_dests = [
     "Mendoza (Argentina)|mild,nature,relax,foodie,romance|#8B0000|mendoza vineyards mountains wine|7-course wine pairing lunch in the vineyards|Eat a massive traditional Asado BBQ|Drink world-class Malbec wine directly from the barrel|Drink Fernet and coke|Bike leisurely between the massive vineyards|Go Horseback riding with Gauchos at sunset|Whitewater raft down the Mendoza River|Hike the base of Mount Aconcagua|Paraglide over the Andes mountains|Soak in natural thermal hot springs|Zipline across the valleys|Take a massive outdoor cooking masterclass",
     "Cartagena (Colombia)|hot,city,beach,culture,party|#FF8C00|cartagena colombia colorful colonial streets|Upscale Caribbean-Colombian fusion dining|Eat Arepas filled with cheese from a street cart|Drink Aguardiente firewater shots until you drop|Drink fresh Lulo fruit juice in the sun|Take photos with the Palenqueras fruit ladies|Ride a horse-drawn carriage through the old town|Sail a yacht to the pristine Rosario Islands|Dance Salsa in the legendary Cafe Havana|Bathe in a warm bizarre Mud Volcano|Walk the massive stone fortress walls at sunset|Explore the colourful gritty Getsemani neighbourhood|Scuba dive the warm Caribbean reefs",
     "Medellin (Colombia)|mild,city,party,culture|#32CD32|medellin colombia mountains cable car|High-end dining in the trendy El Poblado district|Eat a massive Bandeja Paisa meat platter|Drink Aguardiente|Drink fresh Colombian Craft beer|Ride the Metrocable cars over the mountain slums|Take a fascinating Pablo Escobar history tour|Party on exclusive rooftops until dawn|Paraglide high over the entire city|Take a day trip to climb the massive Guatape rock|Explore the street art of Comuna 13|Take intensive Salsa dancing lessons|Take a 4x4 Coffee farm tour",
-
-    # EUROPE
-    "Paris (France)|mild,city,culture,foodie,luxury,romance|#C71585|paris eiffel tower sunset romance|Wait in line for Cedric Grolet viral fruit illusion pastries|Eat the famous hot chocolate and mont blanc at Angelina|Champagne at the very top of the Eiffel Tower|Drink inside a secret speakeasy behind a washing machine|Take photos in a vintage Fotoautomat booth in Montmartre|Have a chic picnic at Place Vosges|Take a luxury Spa cruise down the Seine River|VIP skip-the-line night tour of the Louvre|Explore the underground bone Catacombs|Dine on a glass-roofed double-decker bus|Take a croissant-making masterclass|Attend a cabaret show at the Moulin Rouge",
+    "Buenos Aires (Argentina)|hot,city,culture,party,foodie|#B22222|buenos aires argentina tango colorful streets|Eat a legendary 1kg Ribeye steak at Don Julio|Eat viral gooey Alfajores filled with Dulce de Leche|Drink Malbec at a hidden speakeasy like Florería Atlántico|Drink Yerba Mate in a local park|Watch a passionate Tango performance in La Boca|Wander through the massive ornate Recoleta Cemetery|Attend a wildly loud Boca Juniors football match|Party until 7 AM at a massive Palermo techno club|Explore the vibrant San Telmo Sunday market|Take a day trip across the river to Uruguay|Eat a greasy Choripán from a street cart|Watch a polo match with the locals",
+    
+    # EUROPE / MIDDLE EAST / NON-EUROPE REPLACEMENTS
     "Rome (Italy)|mild,hot,city,culture,foodie|#A0522D|rome colosseum ancient sunset|Build your own custom Tiramisu at the viral Pompi|Massive slice of Roman pizza al taglio|Vintage Barolo wine tasting in an ancient cellar|Drink an Aperol Spritz overlooking Piazza Navona|Throw a coin in the Trevi Fountain at midnight|Eat gelato on the Spanish Steps|Take a pasta making class at a Frascati farmhouse|Attend a Gladiator training school on the Appian Way|Take a private after-hours tour of the Sistine Chapel|Ride a Vespa through the chaotic Roman traffic|Explore the ancient crypts made entirely of human bones|Helicopter tour over the ancient ruins",
     "Amalfi Coast (Italy)|hot,beach,foodie,luxury,romance|#FF8C00|amalfi coast cliffside colorful houses|Eat lemon sorbet served inside a massive hollowed-out lemon|Eat lunch at a viral restaurant overlooking the cliffs|Limoncello tasting straight from a lemon farm|Drink Prosecco on a private vintage wooden boat|Shop for handmade leather sandals in Positano|Take a vintage Vespa tour along the coastal roads|Swim into the sparkling Blue Grotto sea cave|Take a helicopter tour of Mount Vesuvius|Hike the breathtaking Path of the Gods|Take a private cooking class in a cliffside villa|Charter a luxury yacht to the island of Capri|Jump off the cliffs into the Mediterranean",
     "Venice (Italy)|mild,city,romance,culture|#008080|venice canals gondola sunset romance|Romantic seafood dinner on a floating terrace|Venetian tapas in a crowded local bacaro|Bellinis at the famous Harrys Bar|Spritz in St Marks Square listening to the orchestra|Get lost in the tiny alleyways|Watch a glassblower in Murano|Private sunset Gondola ride with a serenader|Attend a masquerade ball in a grand palazzo|Kayak through the quiet hidden canals|VIP tour of the Doges Palace secret passages|Take a water taxi across the lagoon at high speed|Make your own authentic Carnival mask",
@@ -101,8 +102,7 @@ raw_dests = [
     "Swiss Alps (Switzerland)|cold,mountains,adventure,luxury,nature|#8B0000|swiss alps matterhorn snow cabin|Eat fondue inside a literal igloo|Eat at a cliff restaurant built into the rock|Drink Dom Pérignon in an outdoor heated jacuzzi|Drink hot spiced Glühwein by a roaring fire|Build a snowman overlooking the Matterhorn|Ride a horse-drawn sleigh through the village|Ride Europe steepest open-air funicular|Helicopter drop-off for extreme off-piste skiing|Paraglide over the snowy peaks|Ice climb up a frozen waterfall|Ride the panoramic Glacier Express train|Bungee jump off a dam like James Bond",
     "Hallstatt (Austria)|cold,mountains,nature,romance|#4682B4|hallstatt austria lake mountains fairytale|Eat gourmet Austrian Schnitzel|Eat fresh lake trout|Drink local Austrian beer|Drink hot cocoa overlooking the fairytale lake|Rent a swan boat on the crystal clear water|Wander the perfectly preserved alpine village|Take the funicular up to the ancient salt mines|Walk out onto the terrifying Skywalk viewing platform|Explore the eerie Dachstein Giant Ice Cave|Hike the dramatic Dachstein mountain range|Take a helicopter tour over the Austrian Alps|Visit the incredibly creepy Bone House",
     "Vienna (Austria)|mild,city,culture,romance|#FFD700|vienna austria palaces music|Gourmet Wiener Schnitzel|Eat a slice of the famous Sachertorte|Sip elegant Viennese coffee in a grand cafe|Drink local Gruner Veltliner wine in a vineyard|Watch the Lipizzaner dancing horses|Ride the giant historic Ferris wheel|Attend a grand ball in a tuxedo|Listen to Mozart performed in a golden hall|Tour the massive Schönbrunn Palace|Visit the creepy catacombs of St Stephens|Take a horse-drawn fiaker ride at night|Sail the Danube river",
-    "London (UK)|mild,cold,city,culture,party|#191970|london big ben red bus thames|Eat afternoon tea at Sketch pink room|Eat in glass igloos overlooking Tower Bridge|Drink cocktails at the eccentric Alchemist bar|Drink pints of ale in a 400-year-old tavern|Feed the pelicans in St James Park|Browse quirky antiques at Portobello Road|VIP pod on the London Eye with champagne|Take a terrifying Jack the Ripper night walking tour|Climb completely over the top of the O2 Arena|Attend a smash-hit West End theatre premiere|Speedboat down the River Thames at 40mph|Tour the hidden underground Churchill War Rooms",
-    "Scottish Highlands (UK)|cold,mild,mountains,nature,adventure|#2E8B57|scottish highlands castle loch fog mountains|Gourmet venison at a luxury castle|Eat traditional Haggis Neeps and Tatties|Taste 50-year-old single malt Scotch whisky|Drink pints of heavy ale in a historic inn|Spot highland cows hairy coos|Search the loch for the Loch Ness Monster|Sleep in a massive historic haunted castle|Ride the real Hogwarts Express steam train|Hike the dramatic ridges of Glencoe|Sea kayak with wild seals|Off-road in a Land Rover through the mud|Learn archery and falconry on a noble estate",
+    "Cappadocia (Turkey)|mild,nature,adventure,romance|#D2691E|cappadocia turkey hot air balloons fairy chimneys cave|Eat viral Pottery Kebab cracked open at the table|Eat massive Turkish Breakfast spreads|Drink Turkish Coffee brewed in hot sand|Drink local wine in a cave cellars|Watch sunrise hot air balloons from a rooftop covered in carpets|Sleep inside a 1000-year-old luxury cave hotel|Take a hot air balloon flight over the fairy chimneys|Drive ATVs through the dusty Rose Valley|Explore the massive underground city of Derinkuyu|Horseback riding through the surreal rock formations|Watch a mesmerizing whirling dervishes ceremony|Hike the Pigeon Valley at sunset",
     "Barcelona (Spain)|hot,city,beach,party,culture|#DC143C|barcelona sagrada familia colorful gaudi|Eat Avant-garde molecular gastronomy|Eat endless massive pans of seafood Paella|Sangria tasting on a luxury rooftop|Cava in a historic underground cellar|Find the hidden mosaics in Park Güell|Watch street performers on La Rambla|Sail a catamaran on the Mediterranean at sunset|VIP tour of the unfinished Sagrada Familia|Attend a live passionate Flamenco show|Helicopter ride over the coastline|Dance until 6 AM at a massive beach club|Take a hot air balloon over Catalonia",
     "Ibiza (Spain)|hot,beach,party,luxury|#FF1493|ibiza beach party neon sunset ocean|VIP dining at a superclub|Eat fresh grilled octopus at a quiet hidden cove|Bottle service with sparklers at Pacha|Drink Hierbas liqueur at a bohemian beach shack|Shop at the hippie markets|Watch the sunset at Es Vedra with bongos|Dance until 8 AM with the worlds biggest DJs|Charter a luxury yacht to Formentera|Cliff jump into the crystal clear Mediterranean|Parasail high above the party beaches|Explore hidden sea caves on a paddleboard|Attend an exclusive secret villa afterparty",
     "Seville (Spain)|hot,city,culture,romance|#FF8C00|seville spain moorish architecture orange trees|Gourmet Andalusian tapas|Eat Churros con Chocolate|Drink Sherry wine|Drink Tinto de Verano|Walk through the massive Plaza de España|Smell the orange trees in the courtyards|Explore the stunning Royal Alcázar palace|Watch a deeply passionate Flamenco performance in a tiny cave|Walk the wooden Metropol Parasol at sunset|Take a carriage ride through the old town|Attend the wild Feria de Abril festival|Take a boat cruise down the Guadalquivir river",
@@ -131,6 +131,7 @@ raw_dests = [
     "Dubai (UAE)|hot,city,luxury,party,adventure|#D4AF37|dubai skyline burj khalifa luxury supercars|Dine in the Sky suspended 50 meters in the air|Eat authentic Shawarma for 2 dollars on the street|500 dollar cocktails at the Burj Al Arab|Drink Camel Milk cappuccinos|Ride the terrifying glass slide on the outside of a skyscraper|Watch the spectacular Dubai Fountains dance|Skydive directly over the Palm Jumeirah islands|Rent a Lamborghini to cruise down Sheikh Zayed Road|Dune bash in a massive 4x4 across the red desert|Ski inside a massive indoor mall|Yacht party in the Dubai Marina|Scuba dive in the deepest pool in the world",
     "Abu Dhabi (UAE)|hot,city,luxury,adventure|#DAA520|abu dhabi grand mosque luxury|Emirates Palace gold-flaked cappuccino|Eat massive Shawarma platters|Champagne on a mega-yacht|Drink Camel milk|Visit the massive white Sheikh Zayed Grand Mosque|Explore the stunning Louvre Abu Dhabi|Ride the fastest rollercoaster in the world at Ferrari World|Drive a Formula 1 car on the Yas Marina Circuit|Dune bashing in the Empty Quarter|Visit the unique Falconry hospital|Sleep in a luxury desert resort|Scuba dive the warm gulf waters",
     "Petra (Jordan)|hot,culture,adventure,nature|#CD5C5C|petra jordan ancient city carved rocks desert|Luxury dining under the stars in Wadi Rum|Eat massive communal plates of Mansaf|Drink sweet Bedouin tea cooked over a fire|Drink Arak anise spirit|Float effortlessly in the hyper-salty Dead Sea|Cover yourself in healing Dead Sea mud|Walk through the narrow canyon Siq to see the Treasury reveal|See Petra lit by thousands of candles at night|Sleep in a transparent Martian dome in the Wadi Rum desert|Ride a 4x4 through the red sands like Lawrence of Arabia|Scuba dive in the Red Sea at Aqaba|Hike the rugged Dana Biosphere Reserve",
+    "AlUla (Saudi Arabia)|hot,nature,luxury,culture,adventure|#CD853F|alula saudi arabia desert mirror building hegra|High-end fusion dining inside a canyon at Tama|Eat traditional Kabsa under the stars|Drink mocktails at the incredible mirrored Maraya building|Drink Arabic coffee with fresh dates|Take a viral photo at the massive Elephant Rock|Walk through the lush shaded AlUla Oasis|Explore the monumental carved tombs of Hegra|Stargaze in the pitch-black desert with an astronomer|Take a helicopter tour over the stunning rock formations|Ride purebred Arabian horses through the dunes|Zipline across the massive desert canyons|Hike the surreal twisted rock mazes",
     "Socotra (Yemen)|hot,nature,adventure,beach|#2F4F4F|socotra yemen alien trees dragon blood|Eat fresh fish caught by local fishermen|Eat traditional Yemeni rice dishes|Drink sweet black tea|Drink fresh water from desert springs|Take photos with the alien-like Dragons Blood trees|Find giant bottle trees in the desert|Camp under the absolute darkest star-filled skies on earth|Swim in the stunning crystal clear Detwah Lagoon|Hike the massive white sand dunes of Archer Beach|Explore the massive Hoq cave system|Scuba dive untouched pristine coral reefs|Interact with the completely isolated local tribes",
     "Mauritius|hot,beach,nature,luxury|#FF61A6|mauritius beach ocean luxury|Gourmet French-Creole fusion|Eat Dholl puri street food|Drink Phoenix beer|Rum tasting at a local distillery|Visit the surreal Seven Colored Earth|Swim in warm jungle waterfalls|Take a helicopter to see the Underwater Waterfall illusion|Scuba dive the colorful reefs|Kitesurf the breezy Indian Ocean|Go Deep sea fishing for Marlin|Hike the massive Le Morne Brabant mountain|Charter a luxury catamaran cruise",
     "Seychelles|hot,beach,relax,luxury,romance|#FF61A6|seychelles beach granite rocks crystal ocean|Private beach dining with fresh lobster|Eat spicy octopus curry from a local Creole takeaway|Champagne served in a floating pool tray|Drink Takamaka rum on the rocks|Feed the massive ancient Aldabra Giant Tortoises|Find the rare oddly shaped Coco de Mer nut|Arrive at your 5-star resort via Private Seaplane|Scuba dive through untouched coral reefs|Charter a luxury yacht to island hop|Hike through the dense Jurassic-like Vallée de Mai|Take a transparent glass-bottom kayak over the reefs|Have a full-day couples spa treatment in the jungle canopy",
@@ -143,13 +144,12 @@ raw_dests = [
     "Milford Sound (New Zealand)|cold,nature,mountains,adventure,relax|#2F4F4F|milford sound new zealand fjords waterfalls|Gourmet lunch on a luxury nature cruise|Eat a classic Kiwi meat pie on the bus ride in|Drink hot tea while getting sprayed by a waterfall|Drink Speights beer in a cozy pub|Spot playful Kea alpine parrots|See wild dolphins swimming alongside your boat|Cruise through the majestic towering fjords and waterfalls|Take a scenic flight over the dramatic Southern Alps|Kayak silently through the massive fjords|Hike the multi-day world-famous Milford Track|Scuba dive in the dark deep fjord waters to see black coral|Explore the glowworm caves in nearby Te Anau",
     "Bora Bora (French Polynesia)|hot,beach,relax,luxury,romance|#00BFFF|bora bora tropical island luxury overwater bungalow|Private dinner served on the beach surrounded by tiki torches|Eat Tahitian Poisson Cru raw fish in coconut milk|Drink cocktails out of a freshly cut coconut|Drink Hinano Tahiti beer on a boat|Get a traditional Polynesian flower crown|Have breakfast delivered to your bungalow by canoe|Sleep in a massive overwater bungalow|Swim with friendly reef sharks and stingrays|Take a helicopter ride around Mount Otemanu|Jet ski across the impossibly blue lagoon|Attend an intense Polynesian fire dancing show|Scuba dive outside the reef for lemon sharks",
     "Sydney (Australia)|mild,hot,city,beach,party|#1E90FF|sydney opera house harbour bridge ocean|Fine dining inside the Sydney Opera House sails|Eat a classic Aussie meat pie with ketchup|Cocktails at a rooftop bar overlooking the Harbour|Drink pints of Victoria Bitter at a local pub|Pet Kangaroos and Koalas at the zoo|Take the scenic ferry to Manly Beach|Climb the massive arch of the Sydney Harbour Bridge|Surf the famous waves at Bondi Beach|Sail a yacht around the spectacular Sydney Harbour|Take a seaplane to a luxury waterside restaurant|Party at the massive Mardi Gras festival|Scuba dive with Grey Nurse Sharks in Manly",
-    "Melbourne (Australia)|mild,city,culture,foodie|#4682B4|melbourne city street art coffee|10-course tasting menu at Attica|Eat incredible Asian-fusion in Chinatown|Drink world-class flat white coffee in a hidden laneway|Drink craft beer in a trendy rooftop bar|Wander the vibrant graffiti-filled Hosier Lane|Watch the little penguins parade at Phillip Island|Drive the spectacular Great Ocean Road to the 12 Apostles|Attend a massive deafening AFL footy match|Explore the hidden underground speakeasies|Take a hot air balloon over the Yarra Valley vineyards|Go surfing at Bells Beach|Hike the rugged Grampians National Park",
+    "Melbourne (Australia)|mild,city,culture,foodie|#4682B4|melbourne city street art coffee|10-course tasting menu at Attica|Eat incredible Asian-fusion in Chinatown|Drink world-class flat white coffee in a hidden laneway|Drink craft beer in a trendy rooftop bar|Wander the vibrant graffiti-filled Hosier Lane|Watch the little penguins parade at Phillip Island|Drive the spectacular Great Ocean Road to the 12 Apostles|Attend a massive deafening AFL footy match|Explore the hidden underground speakeasies|Take a hot air balloon over the Yarra Valley vineyards|Go surfing at Bells Beach|Hike the rugged Grampians National National Park",
     "Fiji|hot,beach,nature,adventure,culture|#3CB371|fiji tropical jungle beach beautiful ocean|Eat Lovo meat and veggies cooked in an earth oven|Eat Kokoda Fijian ceviche|Attend a traditional Kava drinking ceremony|Drink Fiji Bitter beer on the beach|Take a mud bath in the Sabeto Hot Springs|Listen to the locals sing traditional farewell songs|Scuba dive the colorful Great Astrolabe Reef|Whitewater raft the spectacular Upper Navua River|Zipline through the dense jungle canopy|Take a seaplane to the remote Yasawa Islands|Surf the massive world-class Cloudbreak wave|Island hop on a luxury catamaran",
     "Samoa|hot,beach,adventure,culture|#3CB371|samoa tropical ocean trench|Eat a massive traditional Umu feast|Eat crispy Taro root chips|Drink Vailima beer|Drink Kava with the village chief|Swim in the spectacular To Sua Ocean Trench|Watch the massive Alofaaga blowholes erupt|Surf the uncrowded pristine reef breaks|Jungle trek to hidden massive waterfalls|Watch a terrifying traditional Fire Knife dance|Scuba dive the untouched coral reefs|Stay in a traditional open-air Fale on the beach|Slide down the natural sliding rocks",
     "Rotorua (New Zealand)|mild,nature,adventure,culture|#8B4513|rotorua new zealand geysers mud pools maori|Eat traditional Maori Hangi cooked underground|Eat a classic Kiwi pavlova|Drink local craft beer|Drink Sauvignon Blanc from Marlborough|Watch the massive Pohutu Geyser erupt|Soak in the colorful geothermal mud pools|Zipline through the massive ancient Redwood forest|Whitewater raft down the highest commercially rafted waterfall|Roll down a hill inside a giant inflatable Zorb ball|Learn the fierce Haka dance at a Maori village|Mountain bike the world-class Whakarewarewa trails|Luge down the mountain track at high speeds"
 ]
 
-# Accurate Dictionary containing real wildlife matching exactly the 100 destinations
 animal_map = {
     "Beijing (China)": ["Giant Pandas", "Red Foxes"],
     "Shanghai (China)": ["Chinese Water Deer", "Yangtze Finless Porpoise"],
@@ -202,8 +202,8 @@ animal_map = {
     "Mendoza (Argentina)": ["Andean Condors", "Guanacos"],
     "Cartagena (Colombia)": ["Sloths", "Iguanas", "Pelicans"],
     "Medellin (Colombia)": ["Toucans", "Monkeys", "Parrots"],
+    "Buenos Aires (Argentina)": ["Capybaras (nearby)", "Stray Cats", "Monk Parakeets"],
 
-    "Paris (France)": ["Stray Cats", "Pigeons", "Swans"],
     "Rome (Italy)": ["Colosseum Cats", "Wild Boars (outskirts)"],
     "Amalfi Coast (Italy)": ["Dolphins", "Peregrine Falcons"],
     "Venice (Italy)": ["Lagoon Seagulls", "Egrets"],
@@ -211,8 +211,7 @@ animal_map = {
     "Swiss Alps (Switzerland)": ["Marmots", "Ibex", "Chamois"],
     "Hallstatt (Austria)": ["Mute Swans", "Alpine Salamanders"],
     "Vienna (Austria)": ["Lipizzaner Horses", "Red Squirrels"],
-    "London (UK)": ["Red Foxes", "Pelicans", "Urban Badgers"],
-    "Scottish Highlands (UK)": ["Highland Cows", "Red Deer", "Golden Eagles", "Seals"],
+    "Cappadocia (Turkey)": ["Street Dogs", "Horses", "Foxes"],
     "Barcelona (Spain)": ["Monk Parakeets", "Wild Boars"],
     "Ibiza (Spain)": ["Podenco Dogs", "Flamingos"],
     "Seville (Spain)": ["Andalusian Horses", "Storks"],
@@ -240,6 +239,7 @@ animal_map = {
     "Dubai (UAE)": ["Camels", "Falcons", "Arabian Oryx"],
     "Abu Dhabi (UAE)": ["Falcons", "Dugongs", "Sea Turtles"],
     "Petra (Jordan)": ["Camels", "Donkeys", "Arabian Horses"],
+    "AlUla (Saudi Arabia)": ["Arabian Leopards (rare)", "Camels", "Arabian Oryx"],
     "Socotra (Yemen)": ["Egyptian Vultures", "Chameleons", "Ghost Crabs"],
     "Mauritius": ["Giant Tortoises", "Pink Pigeons", "Macaques"],
     "Seychelles": ["Aldabra Giant Tortoises", "Fruit Bats", "Sea Turtles", "Whale Sharks"],
@@ -380,7 +380,7 @@ def get_top_dests(n=10):
             else:
                 score -= val * 0.5 
         
-        # Micro random injection prevents mathematical dead heats
+        # Micro random injection prevents mathematical dead heats giving EVERY valid match an equal random chance
         norm = score + random.uniform(0, 0.1)
         scored.append((norm, d))
     
@@ -527,8 +527,6 @@ elif st.session_state.stage == 'activity_selection':
         st.markdown(f"<div style='background-color: rgba(0,0,0,0.5); padding: 40px; border-radius: 20px; height: 220px; display: flex; align-items: center; justify-content: center;'><h2 style='text-align: center;'>{act2}</h2></div><br>", unsafe_allow_html=True)
         st.button("✅ NO, KEEP THIS ONE", key=f"btn2_{rnd}", on_click=pick_activity, args=(act2,))
 
-# --- NEW LINEAR FLOW FOR FINAL RESULT ---
-
 elif st.session_state.stage == 'final_itinerary':
     best_dest = st.session_state.chosen_dest
     dest_data = dests[best_dest]
@@ -546,29 +544,8 @@ elif st.session_state.stage == 'final_itinerary':
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.button("SEE SCENIC PICTURES ➡️", on_click=set_stage, args=('scenic_pictures',))
-
-
-elif st.session_state.stage == 'scenic_pictures':
-    best_dest = st.session_state.chosen_dest
-    dest_data = dests[best_dest]
-    set_bg(dest_data["c"], "#FFFFFF")
-
-    st.markdown(f"<h1 style='text-align: center; font-size: 60px;'>📸 Gorgeous Views in {best_dest}</h1><br>", unsafe_allow_html=True)
-    
-    colA, colB = st.columns(2)
-    with colA:
-        safe_image(dest_data["p"] + " beautiful landscape natural sunlight", seed=12)
-        safe_image(dest_data["p"] + " stunning panoramic wide shot", seed=14)
-    with colB:
-        safe_image(dest_data["p"] + " gorgeous sunset colorful sky", seed=13)
-        safe_image(dest_data["p"] + " local aesthetic view clear weather", seed=15)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
+        # Re-routed seamlessly to the animals page, skipping the multi-picture API bottleneck
         st.button("SEE LOCAL WILDLIFE & ACTIVITIES ➡️", on_click=set_stage, args=('animals_page',))
-
 
 elif st.session_state.stage == 'animals_page':
     best_dest = st.session_state.chosen_dest
